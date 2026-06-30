@@ -35,6 +35,7 @@ def load_env(path=".env"):
         if not line or line.startswith("#") or "=" not in line:
             continue
         k, v = line.split("=", 1)
+        v = re.split(r"\s+#", v, 1)[0]  # drop inline "  # comment" (keeps '#' inside values)
         os.environ.setdefault(k.strip(), v.strip())
 
 
