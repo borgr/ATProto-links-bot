@@ -1,0 +1,46 @@
+name: relay
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"   # every 6 hours (offset off :00)
+  workflow_dispatch: {}       # lets you run it manually from the Actions tab
+
+concurrency:
+  group: relay
+  cancel-in-progress: false
+
+permissions:
+  contents: write             # to commit the de-dupe ledger back
+
+jobs:
+  catchup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+
+      - name: Catch up new links -> Bluesky + Semble
+        env:
+          # secrets
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          ATPROTO_APP_PASSWORD: ${{ secrets.ATPROTO_APP_PASSWORD }}
+          SEMBLE_API_KEY: ${{ secrets.SEMBLE_API_KEY }}
+          # non-secret config
+          ATPROTO_HANDLE: colab-links.bsky.social
+          ATPROTO_PDS: https://bsky.social
+          SEMBLE_COLLECTION_IDS: 065840e8-3d9c-4d1b-9f98-c200218a74ed
+          DISCORD_CHANNEL_MATCH: papers-links-n-sharing
+        run: |
+          python backfill.py --run both --since-days 7 \
+            --exclude-substr "making the links shared outside of discord"
+
+      - name: Persist de-dupe ledger
+        run: |
+          git config user.name "relay-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add backfill_done.json
+          git diff --staged --quiet || git commit -m "update ledger [skip ci]"
+          git push

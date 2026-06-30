@@ -1,0 +1,18 @@
+# Secrets — never commit
+.env
+
+# Logs (ephemeral)
+*.log
+
+# Python
+__pycache__/
+*.pyc
+
+# Reverse-engineering scratch
+semble_home.html
+semble_js/
+
+.DS_Store
+
+# NOTE: backfill_done.json IS committed on purpose — it is the de-dupe
+# ledger and must persist across scheduled runs.
