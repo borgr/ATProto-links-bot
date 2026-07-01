@@ -77,35 +77,108 @@ def display_for(url):
     return f"{netloc}/…"
 
 
-def tok_len(token):
-    return len(display_for(token)) if URL_RE.fullmatch(token) else len(token)
+# Tokens ending in "." that are NOT sentence ends (kept lowercase, dot-stripped).
+ABBREV = {"e.g", "i.e", "eg", "ie", "al", "et", "fig", "vs", "dr", "mr", "mrs",
+          "ms", "prof", "st", "cf", "etc", "no", "vol", "eq", "sec", "ref",
+          "pp", "approx", "resp", "inc", "ltd", "figs", "eqs"}
+
+
+def _url_reductions(text):
+    """(start, end, saved) per URL: how many chars its shortened display saves,
+    so a very long URL (e.g. a Scholar alert link) doesn't force a needless split."""
+    return [(m.start(), m.end(), len(m.group(0)) - len(display_for(m.group(0))))
+            for m in URL_RE.finditer(text)]
+
+
+def _eff(text, a, b, red):
+    """Effective (display) length of text[a:b]. URLs contain no whitespace, so each
+    URL is always fully inside one chunk -> subtract its display saving in full."""
+    n = b - a
+    for s, e, saved in red:
+        if a <= s and e <= b:
+            n -= saved
+    return n
+
+
+def _is_sentence_end(text, i, red):
+    """Whether text[i] ('.', '!' or '?') really ends a sentence (not a decimal,
+    arXiv id, URL, or abbreviation like 'e.g.'/'et al.')."""
+    if any(s <= i < e for s, e, _ in red):      # inside a URL
+        return False
+    if text[i] in "!?":
+        return True
+    if i > 0 and text[i - 1].isdigit():          # 3.14, 2606.24579, v2.
+        return False
+    j = i                                        # trailing alpha run before the dot
+    while j > 0 and text[j - 1].isalpha():
+        j -= 1
+    word = text[j:i].lower()
+    if len(word) <= 1:                           # "e.g.", "U.S.", initials
+        return False
+    return word not in ABBREV
+
+
+def _boundaries(text, red):
+    """Every whitespace run as (content_end, next_start, priority):
+    4 = paragraph (newline), 3 = sentence, 2 = clause (,;:), 1 = plain space."""
+    out, i, n = [], 0, len(text)
+    while i < n:
+        if not text[i].isspace():
+            i += 1
+            continue
+        a = i
+        while i < n and text[i].isspace():
+            i += 1
+        prev = text[a - 1] if a > 0 else ""
+        if "\n" in text[a:i]:
+            p = 4
+        elif prev in ".!?" and _is_sentence_end(text, a - 1, red):
+            p = 3
+        elif prev in ",;:":
+            p = 2
+        else:
+            p = 1
+        out.append((a, i, p))
+    return out
 
 
 def chunk_text(text, reserve=0):
-    """Split text into <=LIMIT pieces at whitespace boundaries.
-    `reserve` characters are kept free in the LAST chunk (for the author suffix)."""
-    words = text.split()
-    chunks, cur, cur_len = [], [], 0
-    for w in words:
-        wl = tok_len(w)
-        add = wl + (1 if cur else 0)
-        if cur and cur_len + add > LIMIT:
-            chunks.append(" ".join(cur))
-            cur, cur_len = [], 0
-            add = wl
-        if wl > LIMIT and not URL_RE.fullmatch(w):
-            # hard-split an over-long non-URL token
-            for i in range(0, len(w), LIMIT):
-                chunks.append(w[i:i + LIMIT])
-            continue
-        cur.append(w)
-        cur_len += add
-    if cur:
-        chunks.append(" ".join(cur))
+    """Split into <=LIMIT posts, preferring sentence > clause > word breaks and
+    balancing sizes so a thread doesn't end in a tiny orphan. `reserve` chars are
+    kept free on the LAST post (for the author suffix)."""
+    text = text.strip()
+    if not text:
+        return [""]
+    red = _url_reductions(text)
+    if _eff(text, 0, len(text), red) <= LIMIT:
+        chunks = [text]
+    else:
+        bounds = _boundaries(text, red)
+        chunks, start = [], 0
+        while start < len(text):
+            if _eff(text, start, len(text), red) <= LIMIT:   # remainder fits
+                chunks.append(text[start:].strip())
+                break
+            remaining = _eff(text, start, len(text), red)
+            target = remaining / (-(-remaining // LIMIT))     # balanced size (ceil posts)
+            feasible = [(a, b, p) for (a, b, p) in bounds
+                        if a > start < len(text)
+                        and 0 < _eff(text, start, a, red) <= LIMIT]
+            if not feasible:                                  # unbreakable token > LIMIT
+                chunks.append(text[start:start + LIMIT])
+                start += LIMIT
+                continue
+            accept = [x for x in feasible
+                      if _eff(text, start, x[0], red) >= target * 0.6]  # not too short
+            a, b, _ = min(accept or feasible,
+                          key=lambda x: (-x[2], abs(_eff(text, start, x[0], red) - target)))
+            chunks.append(text[start:a].strip())
+            start = b
     if not chunks:
         chunks = [""]
-    # If author suffix won't fit on the last chunk, start a new last chunk.
-    if reserve and len(chunks[-1]) + reserve > LIMIT and len(chunks[-1]) > 0:
+    # keep room for the author suffix on the last post
+    last = chunks[-1]
+    if reserve and last and _eff(last, 0, len(last), _url_reductions(last)) + reserve > LIMIT:
         chunks.append("")
     return chunks
 
