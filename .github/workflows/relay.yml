@@ -44,3 +44,12 @@ jobs:
           git add backfill_done.json
           git diff --staged --quiet || git commit -m "update ledger [skip ci]"
           git push
+
+      - name: Notify Discord on failure
+        if: failure()
+        env:
+          WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          [ -z "$WEBHOOK" ] && { echo "no DISCORD_WEBHOOK_URL secret; skipping ping"; exit 0; }
+          curl -sf -H "Content-Type: application/json" -X POST "$WEBHOOK" \
+            -d "{\"content\":\"⚠️ **relay run failed** — ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID} (links may not have posted)\"}"

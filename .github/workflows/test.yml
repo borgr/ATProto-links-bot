@@ -1,0 +1,32 @@
+name: tests
+
+on:
+  push:
+    paths: ["**.py", "requirements.txt", ".github/workflows/test.yml"]
+  pull_request:
+  workflow_dispatch: {}
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  chunking:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+      - name: Run chunk_text tests
+        run: python test_chunking.py
+
+      - name: Notify Discord on failure
+        if: failure()
+        env:
+          WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          [ -z "$WEBHOOK" ] && { echo "no DISCORD_WEBHOOK_URL secret; skipping ping"; exit 0; }
+          curl -sf -H "Content-Type: application/json" -X POST "$WEBHOOK" \
+            -d "{\"content\":\"❌ **tests failed** on \`${GITHUB_REF_NAME}\` — ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}\"}"

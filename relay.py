@@ -41,7 +41,7 @@ def load_env(path=".env"):
 
 load_env()
 
-DISCORD_TOKEN = os.environ["DISCORD_BOT_TOKEN"]
+DISCORD_TOKEN = os.environ.get("DISCORD_BOT_TOKEN", "")  # empty is fine for importing (e.g. tests)
 CHANNEL_MATCH = os.environ.get("DISCORD_CHANNEL_MATCH", "papers-links-n-sharing").lower()
 DRY_RUN = os.environ.get("DRY_RUN", "1") not in ("0", "false", "False", "")
 INCLUDE_AUTHOR = os.environ.get("INCLUDE_AUTHOR", "1") not in ("0", "false", "")
@@ -398,4 +398,6 @@ async def on_message(message):
 
 
 if __name__ == "__main__":
+    if not DISCORD_TOKEN:
+        raise SystemExit("DISCORD_BOT_TOKEN not set (put it in .env or the environment)")
     client.run(DISCORD_TOKEN)
