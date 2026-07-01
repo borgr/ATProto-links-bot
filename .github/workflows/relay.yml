@@ -51,5 +51,7 @@ jobs:
           WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
           [ -z "$WEBHOOK" ] && { echo "no DISCORD_WEBHOOK_URL secret; skipping ping"; exit 0; }
-          curl -sf -H "Content-Type: application/json" -X POST "$WEBHOOK" \
-            -d "{\"content\":\"⚠️ **relay run failed** — ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID} (links may not have posted)\"}"
+          MSG=$(printf '⚠️ **relay** run failed — links may not have posted this cycle.\n**repo:** %s\n**run:** %s\nLikely causes: expired Discord/Bluesky/Semble credential, or a change in Semble'"'"'s alpha API.' \
+            "$GITHUB_REPOSITORY" "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID")
+          jq -n --arg c "$MSG" '{username:"ATProto-links-bot CI", content:$c}' \
+            | curl -sf -H "Content-Type: application/json" -X POST "$WEBHOOK" -d @-
