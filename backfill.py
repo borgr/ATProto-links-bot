@@ -94,7 +94,7 @@ async def collect(channel):
 
 @client.event
 async def on_ready():
-    global bsky
+    global bsky, DO_SEMBLE
     print(f"[OK] Logged in as {client.user}")
     chans = [c for g in client.guilds for c in g.text_channels
              if relay.CHANNEL_MATCH in c.name.lower()]
@@ -145,9 +145,11 @@ async def on_ready():
         ok, detail = relay.semble_check()
         print(f"[preflight] Semble key: {detail}")
         if not ok:
-            _fail(f"Semble preflight failed ({detail}) — set a fresh SEMBLE_API_KEY")
-            await client.close()
-            return
+            # Degrade, don't abort: a dead Semble key must not stop Bluesky too.
+            # _fail() still makes the run exit non-zero, so the alert fires.
+            _fail(f"Semble preflight failed ({detail}) — set a fresh SEMBLE_API_KEY; "
+                  "continuing with Bluesky only")
+            DO_SEMBLE = False
     if DO_BLUESKY:
         from atproto import Client as BskyClient
         try:
@@ -174,9 +176,9 @@ async def on_ready():
                 did_any = True
             else:
                 semble_fail += 1
-                if auth_failed:                 # systemic: stop and fail the run
+                if auth_failed:                 # systemic: stop Semble, keep Bluesky
                     _fail("Semble rejected the API key mid-run — rotate SEMBLE_API_KEY")
-                    break
+                    DO_SEMBLE = False
         if DO_BLUESKY and ("bluesky", str(m.id)) not in ledger:
             try:
                 relay.post_to_bluesky(m, urls, author)
