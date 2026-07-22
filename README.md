@@ -43,12 +43,37 @@ owner. That's the only monitoring you need.
 --seed-only                 mark current history as done WITHOUT posting (cutover helper)
 ```
 
-## Maintenance
-- **Rotate secrets**: regenerate in Discord/Bluesky/Semble, update the GitHub Action secrets.
-- **Semble API** is undocumented/alpha (`network.cosmik.*` on `api.semble.so/api`) — the
-  most likely thing to break. A failed run = email; check `card.addUrl`'s shape if so.
-- **Local dev**: `cp .env.example .env`, fill it, `pip install -r requirements.txt`,
-  `python backfill.py` (scan only) or `--run both`.
+## Maintenance & troubleshooting
+
+**Health check:** `python check_keys.py` verifies the Discord, Bluesky, and Semble
+credentials in your local `.env`.
+
+**Alerts:** a failed run pings Discord (as "ATProto-links-bot CI") **and** emails the repo
+owner. Alerts are **de-duplicated** — only the first failure after a success pings, so an
+ongoing outage won't spam you every hour.
+
+**Secrets live in TWO places that can drift apart:**
+- **GitHub repo secrets** (Settings → Secrets and variables → Actions) — used by the
+  scheduled run: `DISCORD_BOT_TOKEN`, `ATPROTO_APP_PASSWORD`, `SEMBLE_API_KEY`,
+  `DISCORD_WEBHOOK_URL`.
+- **Local `.env`** — used only for local runs / `check_keys.py`.
+- A run can fail in CI while `.env` looks fine (or vice-versa). Check both.
+
+**Most common failure — Semble `preflight failed (HTTP 401)`:** the `SEMBLE_API_KEY`
+secret is invalid or out of sync. Fix:
+1. `python check_keys.py` — is the Semble key in `.env` valid?
+   - **Valid** → GitHub's secret is just stale. Re-sync it (no new key needed):
+     `sed -n 's/^SEMBLE_API_KEY=//p' .env | tr -d '\n' | gh secret set SEMBLE_API_KEY -R borgr/ATProto-links-bot`
+   - **Invalid** → make a fresh key at semble.so, put it in `.env` *and* the GitHub secret.
+2. Re-run: `gh workflow run relay.yml -R borgr/ATProto-links-bot`. Links that failed are
+   **not** marked done, so they auto-post on the next successful run (no manual backfill).
+
+**Semble API** is undocumented alpha (`network.cosmik.*` on `api.semble.so/api`) — the most
+likely thing to change. If `card.addUrl` starts rejecting the payload, re-inspect the web
+app's network calls.
+
+**Local dev:** `cp .env.example .env`, fill it, `pip install -r requirements.txt`, then
+`python backfill.py` (scan only), and `python test_chunking.py && python test_semble.py`.
 
 ## Two ways to run, pick one (don't run both — they'd double-post)
 - **Scheduled Action** (recommended): batched, free, no machine to babysit.

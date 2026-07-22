@@ -28,8 +28,12 @@ jobs:
         if: failure()
         env:
           WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           [ -z "$WEBHOOK" ] && { echo "no DISCORD_WEBHOOK_URL secret; skipping ping"; exit 0; }
+          prev=$(gh run list -R "$GITHUB_REPOSITORY" --workflow test.yml --status completed \
+                   --limit 1 --json conclusion -q '.[0].conclusion' 2>/dev/null || echo "")
+          if [ "$prev" = "failure" ]; then echo "prev run already failed; skipping repeat ping"; exit 0; fi
           MSG=$(printf '❌ **%s** workflow failed\n**repo:** %s\n**branch:** `%s`\n**commit:** `%s` by %s\n**run:** %s' \
             "$GITHUB_WORKFLOW" "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME" "${GITHUB_SHA:0:7}" "$GITHUB_ACTOR" \
             "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID")

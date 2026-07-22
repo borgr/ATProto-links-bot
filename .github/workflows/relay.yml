@@ -49,8 +49,14 @@ jobs:
         if: failure()
         env:
           WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           [ -z "$WEBHOOK" ] && { echo "no DISCORD_WEBHOOK_URL secret; skipping ping"; exit 0; }
+          # De-dupe: only alert on a NEW failure. If the previous completed run also
+          # failed, we've already pinged — stay quiet to avoid hourly alert spam.
+          prev=$(gh run list -R "$GITHUB_REPOSITORY" --workflow relay.yml --status completed \
+                   --limit 1 --json conclusion -q '.[0].conclusion' 2>/dev/null || echo "")
+          if [ "$prev" = "failure" ]; then echo "prev run already failed; skipping repeat ping"; exit 0; fi
           MSG=$(printf '⚠️ **relay** run failed — links may not have posted this cycle.\n**repo:** %s\n**run:** %s\nLikely causes: expired Discord/Bluesky/Semble credential, or a change in Semble'"'"'s alpha API.' \
             "$GITHUB_REPOSITORY" "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID")
           jq -n --arg c "$MSG" '{username:"ATProto-links-bot CI", content:$c}' \
