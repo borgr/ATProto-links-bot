@@ -21,6 +21,7 @@ import json
 import time
 import html
 import urllib.request
+import urllib.error
 from urllib.parse import urlparse
 
 import discord
@@ -58,6 +59,7 @@ SEMBLE_COLLECTION_IDS = [c.strip() for c in os.environ.get("SEMBLE_COLLECTION_ID
 SEMBLE_ENABLE = bool(SEMBLE_API_KEY and SEMBLE_COLLECTION_IDS) and \
     os.environ.get("SEMBLE_ENABLE", "1") not in ("0", "false", "")
 SEMBLE_ADD_URL = "https://api.semble.so/api/network.cosmik.card.addUrl"
+SEMBLE_LIST_MINE = "https://api.semble.so/api/network.cosmik.collection.listMine"
 
 # Post to Bluesky? (separate toggle so you can run Semble-only or Bluesky-only)
 BLUESKY_ENABLE = os.environ.get("BLUESKY_ENABLE", "1") not in ("0", "false", "")
@@ -244,27 +246,64 @@ def download(url, cap=2_000_000):
         return None
 
 
+class SembleAuthError(Exception):
+    """Semble rejected the API key (401/403). Systemic — not a per-URL problem."""
+
+
+def _semble_request(url, method="GET", body=None, timeout=90, retries=2):
+    """Call the Semble API. Retries transient (5xx / network / timeout) errors with
+    backoff; raises SembleAuthError on 401/403; re-raises other errors."""
+    headers = {"Authorization": f"Bearer {SEMBLE_API_KEY}", **UA}
+    data = None
+    if body is not None:
+        headers["Content-Type"] = "application/json"
+        data = json.dumps(body).encode("utf-8")
+    last = None
+    for attempt in range(retries + 1):
+        req = urllib.request.Request(url, data=data, method=method, headers=headers)
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                return json.loads(r.read().decode("utf-8", "ignore"))
+        except urllib.error.HTTPError as e:
+            if e.code in (401, 403):
+                raise SembleAuthError(f"HTTP {e.code} — Semble API key invalid or expired")
+            if e.code < 500:            # other 4xx: not retryable
+                raise
+            last = e                    # 5xx: retryable
+        except (urllib.error.URLError, TimeoutError, OSError) as e:
+            last = e                    # network/timeout: retryable
+        if attempt < retries:
+            time.sleep(2 * (attempt + 1))
+    raise last
+
+
 def semble_add_url(url, note):
-    """Add a URL as a card to the configured Semble collection(s). Raises on HTTP error."""
-    body = json.dumps({
-        "url": url,
-        "note": note,
-        "collectionIds": SEMBLE_COLLECTION_IDS,
-    }).encode("utf-8")
-    headers = {"Authorization": f"Bearer {SEMBLE_API_KEY}",
-               "Content-Type": "application/json", **UA}
-    req = urllib.request.Request(SEMBLE_ADD_URL, data=body, method="POST", headers=headers)
-    with urllib.request.urlopen(req, timeout=90) as r:  # Semble fetches metadata server-side; can be slow
-        return json.loads(r.read().decode("utf-8", "ignore"))
+    """Add a URL as a card to the configured Semble collection(s)."""
+    return _semble_request(SEMBLE_ADD_URL, "POST",
+                           {"url": url, "note": note, "collectionIds": SEMBLE_COLLECTION_IDS})
+
+
+def semble_check():
+    """Preflight: cheaply verify the API key works. Returns (ok: bool, detail: str)."""
+    if not SEMBLE_ENABLE:
+        return True, "disabled"
+    try:
+        _semble_request(SEMBLE_LIST_MINE, "GET", timeout=30, retries=1)
+        return True, "ok"
+    except SembleAuthError as e:
+        return False, str(e)
+    except Exception as e:
+        return False, f"unreachable: {e}"
 
 
 def relay_to_semble(message, urls, author):
-    """Add each (deduped) URL in the message to Semble, with the message text as a note."""
+    """Add each (deduped) URL in the message to Semble.
+    Returns (all_ok: bool, auth_failed: bool)."""
     if not SEMBLE_ENABLE:
-        return
+        return True, False
     text_only = URL_RE.sub("", message.content or "").strip()
     note = (text_only + "\n\n" if text_only else "") + f"— {author} · Discord #{message.channel.name}"
-    all_ok = True
+    all_ok, auth_failed = True, False
     for u in dict.fromkeys(urls):  # dedupe, preserve order
         if DRY_RUN:
             print(f"  [semble] would add {u}  -> collections {SEMBLE_COLLECTION_IDS}")
@@ -272,10 +311,37 @@ def relay_to_semble(message, urls, author):
         try:
             res = semble_add_url(u, note)
             print(f"  [semble] added {u} -> card {res.get('urlCardId', '?')}")
+        except SembleAuthError as e:
+            print(f"  [semble][AUTH] {u}: {e}")
+            all_ok, auth_failed = False, True
+            break  # key is dead — stop hammering; the run will be failed loudly
         except Exception as e:
             print(f"  [semble][ERR] {u}: {e}")
             all_ok = False
-    return all_ok
+    return all_ok, auth_failed
+
+
+def post_to_bluesky(message, urls, author):
+    """Post a message to Bluesky as a thread (uses the module-global `bsky` client).
+    Shared by the live listener and the scheduled catch-up. Returns #posts made."""
+    from atproto import client_utils, models
+    suffix = f"\n— {author}" if INCLUDE_AUTHOR else ""
+    chunks = chunk_text(message.content, reserve=len(suffix))
+    if suffix and len(chunks[-1]) + len(suffix) <= LIMIT:
+        chunks[-1] = chunks[-1] + suffix
+    embed, _ = make_embed(message, urls)
+    root_ref = parent_ref = None
+    for i, c in enumerate(chunks):
+        tb = build_richtext(c, client_utils)
+        reply_to = (models.AppBskyFeedPost.ReplyRef(parent=parent_ref, root=root_ref)
+                    if parent_ref is not None else None)
+        resp = bsky.send_post(tb, reply_to=reply_to, embed=embed if i == 0 else None)
+        ref = models.create_strong_ref(resp)
+        if root_ref is None:
+            root_ref = ref
+        parent_ref = ref
+        time.sleep(1)  # gentle rate limiting
+    return len(chunks)
 
 
 # ---------- discord ----------
@@ -349,52 +415,17 @@ async def on_message(message):
 
     author = message.author.display_name
 
-    # --- Semble: add one card per link to the collection(s) ---
-    relay_to_semble(message, urls, author)
+    print(f"[RELAY] {author} in #{message.channel.name}: {len(urls)} link(s)")
 
-    # --- Bluesky ---
-    if not BLUESKY_ENABLE:
-        return
-    suffix = f"\n— {author}" if INCLUDE_AUTHOR else ""
-    chunks = chunk_text(message.content, reserve=len(suffix))
-    # append author to last chunk if it fits
-    if suffix and len(chunks[-1]) + len(suffix) <= LIMIT:
-        chunks[-1] = chunks[-1] + suffix
+    # --- Semble ---
+    ok, auth_failed = relay_to_semble(message, urls, author)
+    if auth_failed:
+        print("  [semble][AUTH] key rejected — set a fresh SEMBLE_API_KEY")
 
-    embed, dry_detail = make_embed(message, urls)
-
-    print(f"[RELAY] {author} in #{message.channel.name}: {len(chunks)} post(s)"
-          + (f", embed={embed if DRY_RUN else type(embed).__name__}" if embed else ""))
-
-    if DRY_RUN:
-        for i, c in enumerate(chunks):
-            print(f"  ┌ post {i+1}/{len(chunks)} ({len(c)} chars)")
-            print("  │ " + c.replace("\n", "\n  │ "))
-        if embed:
-            print(f"  └ embed: {embed} -> {dry_detail}")
-        print()
-        return
-
-    # ---- live posting with threading ----
-    from atproto import client_utils, models
-    root_ref = parent_ref = None
-    for i, c in enumerate(chunks):
-        tb = build_richtext(c, client_utils)
-        reply_to = None
-        if parent_ref is not None:
-            reply_to = models.AppBskyFeedPost.ReplyRef(parent=parent_ref, root=root_ref)
-        try:
-            resp = bsky.send_post(
-                tb, reply_to=reply_to, embed=embed if i == 0 else None)
-        except Exception as e:
-            print(f"  [ERR] post {i+1} failed: {e}")
-            break
-        ref = models.create_strong_ref(resp)
-        if root_ref is None:
-            root_ref = ref
-        parent_ref = ref
-        time.sleep(1)  # gentle rate limiting
-    print(f"  [OK] posted thread ({len(chunks)} post(s))\n")
+    # --- Bluesky (shared code path with the scheduled catch-up) ---
+    if BLUESKY_ENABLE and not DRY_RUN:
+        n = post_to_bluesky(message, urls, author)
+        print(f"  [bluesky] posted {n} post(s)\n")
 
 
 if __name__ == "__main__":

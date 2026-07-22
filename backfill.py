@@ -66,24 +66,17 @@ intents.message_content = True
 client = discord.Client(intents=intents)
 
 
-def post_bluesky(message, urls, author):
-    from atproto import client_utils, models
-    suffix = f"\n— {author}" if relay.INCLUDE_AUTHOR else ""
-    chunks = relay.chunk_text(message.content, reserve=len(suffix))
-    if suffix and len(chunks[-1]) + len(suffix) <= relay.LIMIT:
-        chunks[-1] = chunks[-1] + suffix
-    embed, _ = relay.make_embed(message, urls)
-    root_ref = parent_ref = None
-    for i, c in enumerate(chunks):
-        tb = relay.build_richtext(c, client_utils)
-        reply_to = (models.AppBskyFeedPost.ReplyRef(parent=parent_ref, root=root_ref)
-                    if parent_ref is not None else None)
-        resp = bsky.send_post(tb, reply_to=reply_to, embed=embed if i == 0 else None)
-        ref = models.create_strong_ref(resp)
-        if root_ref is None:
-            root_ref = ref
-        parent_ref = ref
-        time.sleep(1)
+EXIT_CODE = 0
+
+
+def _fail(msg):
+    """Record a hard failure so the process exits non-zero -> the workflow's
+    'Notify Discord on failure' step fires."""
+    global EXIT_CODE
+    EXIT_CODE = 1
+    print(f"[FAIL] {msg}")
+
+# Bluesky posting lives in relay.post_to_bluesky (shared with the live listener).
 
 
 async def collect(channel):
@@ -145,14 +138,29 @@ async def on_ready():
 
     print(f"\nPOSTING (semble={DO_SEMBLE}, bluesky={DO_BLUESKY}, max={MAX}) ...")
     relay.DRY_RUN = False
+
+    # Preflight: verify credentials up front so a bad key fails fast and loudly
+    # (the workflow turns a non-zero exit into a Discord alert).
+    if DO_SEMBLE:
+        ok, detail = relay.semble_check()
+        print(f"[preflight] Semble key: {detail}")
+        if not ok:
+            _fail(f"Semble preflight failed ({detail}) — set a fresh SEMBLE_API_KEY")
+            await client.close()
+            return
     if DO_BLUESKY:
         from atproto import Client as BskyClient
-        bsky = BskyClient(base_url=relay.ATPROTO_PDS)
-        bsky.login(relay.ATPROTO_HANDLE, relay.ATPROTO_APP_PASSWORD)
-        relay.bsky = bsky  # make_embed uploads blobs through this
+        try:
+            bsky = BskyClient(base_url=relay.ATPROTO_PDS)
+            bsky.login(relay.ATPROTO_HANDLE, relay.ATPROTO_APP_PASSWORD)
+        except Exception as e:
+            _fail(f"Bluesky login failed: {e}")
+            await client.close()
+            return
+        relay.bsky = bsky  # make_embed / post_to_bluesky use this
         print("[OK] Bluesky logged in")
 
-    posted = 0
+    posted = semble_fail = bluesky_fail = 0
     for m, urls in all_msgs:
         if MAX is not None and posted >= MAX:
             print(f"[stop] reached --max {MAX}")
@@ -160,27 +168,42 @@ async def on_ready():
         author = m.author.display_name
         did_any = False
         if DO_SEMBLE and ("semble", str(m.id)) not in ledger:
-            try:
-                ok = relay.relay_to_semble(m, urls, author)
-                if ok:
-                    ledger.add(("semble", str(m.id)))  # only mark done if every URL succeeded
+            ok, auth_failed = relay.relay_to_semble(m, urls, author)
+            if ok:
+                ledger.add(("semble", str(m.id)))  # only mark done if every URL succeeded
                 did_any = True
-            except Exception as e:
-                print(f"  [semble][ERR] msg {m.id}: {e}")
+            else:
+                semble_fail += 1
+                if auth_failed:                 # systemic: stop and fail the run
+                    _fail("Semble rejected the API key mid-run — rotate SEMBLE_API_KEY")
+                    break
         if DO_BLUESKY and ("bluesky", str(m.id)) not in ledger:
             try:
-                post_bluesky(m, urls, author)
+                relay.post_to_bluesky(m, urls, author)
                 ledger.add(("bluesky", str(m.id)))
                 print(f"  [bluesky] posted msg {m.id} ({author})")
                 did_any = True
             except Exception as e:
                 print(f"  [bluesky][ERR] msg {m.id}: {e}")
+                bluesky_fail += 1
         if did_any:
             posted += 1
             save_ledger(ledger)
             time.sleep(2)  # gentle pacing
-    print(f"\nDONE. Posted {posted} message(s). Ledger: {len(ledger)} entries.")
+
+    save_ledger(ledger)
+    summary = (f"posted={posted}  semble_fail={semble_fail}  "
+               f"bluesky_fail={bluesky_fail}  ledger={len(ledger)}")
+    print(f"\nDONE. {summary}")
+    step = os.environ.get("GITHUB_STEP_SUMMARY")
+    if step:
+        try:
+            with open(step, "a") as fh:
+                fh.write(f"### relay catch-up\n\n`{summary}`\n")
+        except OSError:
+            pass
     await client.close()
 
 
 client.run(relay.DISCORD_TOKEN)
+raise SystemExit(EXIT_CODE)

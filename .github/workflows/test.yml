@@ -19,8 +19,10 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install -r requirements.txt
-      - name: Run chunk_text tests
-        run: python test_chunking.py
+      - name: Run tests
+        run: |
+          python test_chunking.py
+          python test_semble.py
 
       - name: Notify Discord on failure
         if: failure()
