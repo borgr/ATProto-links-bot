@@ -2,7 +2,7 @@ name: relay
 
 on:
   schedule:
-    - cron: "17 */6 * * *"   # every 6 hours (offset off :00)
+    - cron: "23 * * * *"     # hourly (offset off :00; GitHub cron is best-effort)
   workflow_dispatch: {}       # lets you run it manually from the Actions tab
 
 concurrency:
@@ -34,7 +34,7 @@ jobs:
           SEMBLE_COLLECTION_IDS: 065840e8-3d9c-4d1b-9f98-c200218a74ed
           DISCORD_CHANNEL_MATCH: papers-links-n-sharing
         run: |
-          python backfill.py --run both --since-days 7 \
+          python backfill.py --run both --since-days 30 \
             --exclude-substr "making the links shared outside of discord"
 
       - name: Persist de-dupe ledger
