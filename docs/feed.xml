@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>CoLab paper links</title>
+  <subtitle>Links shared in the CoLab Discord #papers-links-n-sharing channels.</subtitle>
+  <link href="https://borgr.github.io/ATProto-links-bot/feed.xml" rel="self"/>
+  <link href="https://borgr.github.io/ATProto-links-bot/"/>
+  <id>https://borgr.github.io/ATProto-links-bot/</id>
+  <updated>2026-08-01T12:23:03Z</updated>
+  <entry>
+    <title>x.com</title>
+    <link href="https://x.com/i/status/2083255427421134891"/>
+    <id>tag:atproto-links-bot,1533087668370538576</id>
+    <updated>2026-08-01T12:23:03Z</updated>
+    <author><name>LChoshen</name></author>
+    <content type="html">&lt;p&gt;&lt;a href=&quot;https://x.com/i/status/2083255427421134891&quot;&gt;https://x.com/i/status/2083255427421134891&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Shared in &lt;a href=&quot;https://discord.com/channels/1496971597288837320/1504474696723337236/1533087668370538576&quot;&gt;Discord&lt;/a&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>Cohere is another known group known in making huge efforts with many people, seems like this is their latest</title>
+    <link href="https://discord.gg/RhNX2STPj"/>
+    <id>tag:atproto-links-bot,1531649302890414190</id>
+    <updated>2026-07-28T13:07:30Z</updated>
+    <author><name>LChoshen</name></author>
+    <content type="html">&lt;p&gt;Cohere is another known group known in making huge efforts with many people, seems like this is their latest:&lt;br&gt;I cannot be translated.&lt;br&gt;I cannot be web-searched.&lt;br&gt;I only make sense if you grew up where I did.&lt;br&gt;What am I?&lt;br&gt;&lt;br&gt;A good riddle.&lt;br&gt;&lt;br&gt;We&amp;#x27;re building a multicultural benchmark of culturally grounded riddles from communities around the world. We&amp;#x27;re not looking for translators: we&amp;#x27;re looking for locals. Come stump the machines and ensure your culture is represented in the next chapter.&lt;br&gt;&lt;br&gt;Join our server to get involved: &lt;a href=&quot;https://discord.gg/RhNX2STPj&quot;&gt;https://discord.gg/RhNX2STPj&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Shared in &lt;a href=&quot;https://discord.com/channels/1496971597288837320/1504474696723337236/1531649302890414190&quot;&gt;Discord&lt;/a&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>Multilingual cultural dataset</title>
+    <link href="https://arxiv.org/abs/2607.21445"/>
+    <id>tag:atproto-links-bot,1531327174584303626</id>
+    <updated>2026-07-27T15:47:29Z</updated>
+    <author><name>LChoshen</name></author>
+    <content type="html">&lt;p&gt;Multilingual cultural dataset&lt;br&gt;6 european languages&lt;br&gt;&lt;a href=&quot;https://arxiv.org/abs/2607.21445&quot;&gt;https://arxiv.org/abs/2607.21445&lt;/a&gt;&lt;br&gt;many multiple choice hard cultural QA in 288 topics (3k questions)&lt;/p&gt;&lt;p&gt;Shared in &lt;a href=&quot;https://discord.com/channels/1496971597288837320/1504474696723337236/1531327174584303626&quot;&gt;Discord&lt;/a&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>Agentic search harnesses (alphaEvolve and co) have many uncheched components which should be seen as a hyperparameter to</title>
+    <link href="https://bsky.app/profile/lchoshen.bsky.social/post/3mrah5xrjn22a"/>
+    <id>tag:atproto-links-bot,1529825097869951026</id>
+    <updated>2026-07-23T12:18:46Z</updated>
+    <author><name>LChoshen</name></author>
+    <content type="html">&lt;p&gt;Agentic search harnesses (alphaEvolve and co) have many uncheched components which should be seen as a hyperparameter to tune, no one significantly beats the others (at least with 3m rollouts 😛 )&lt;br&gt;For you agents lovers&lt;br&gt;&lt;a href=&quot;https://bsky.app/profile/lchoshen.bsky.social/post/3mrah5xrjn22a&quot;&gt;https://bsky.app/profile/lchoshen.bsky.social/post/3mrah5xrjn22a&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Shared in &lt;a href=&quot;https://discord.com/channels/1496971597288837320/1503838806451818656/1529825097869951026&quot;&gt;Discord&lt;/a&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>Following recent requests, I made a bit of organizing on tools one can use with papers (searching, looking for trends, e</title>
+    <link href="https://borgr.github.io/paper_updated/"/>
+    <id>tag:atproto-links-bot,1529262851313635379</id>
+    <updated>2026-07-21T23:04:36Z</updated>
+    <author><name>LChoshen</name></author>
+    <content type="html">&lt;p&gt;Following recent requests, I made a bit of organizing on tools one can use with papers (searching, looking for trends, etc.)&lt;br&gt;Enjoy&lt;br&gt;&lt;a href=&quot;https://borgr.github.io/paper_updated/&quot;&gt;https://borgr.github.io/paper_updated/&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Shared in &lt;a href=&quot;https://discord.com/channels/1496971597288837320/1503838806451818656/1529262851313635379&quot;&gt;Discord&lt;/a&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>x.com</title>
+    <link href="https://x.com/anthropicai/status/2076719540785012872?s=46"/>
+    <id>tag:atproto-links-bot,1526278695281492001</id>
+    <updated>2026-07-13T17:26:37Z</updated>
+    <author><name>Uriel Dolev</name></author>
+    <content type="html">&lt;p&gt;&lt;a href=&quot;https://x.com/anthropicai/status/2076719540785012872?s=46&quot;&gt;https://x.com/anthropicai/status/2076719540785012872?s=46&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Shared in &lt;a href=&quot;https://discord.com/channels/1496971597288837320/1504474696723337236/1526278695281492001&quot;&gt;Discord&lt;/a&gt;&lt;/p&gt;</content>
+  </entry>
+</feed>

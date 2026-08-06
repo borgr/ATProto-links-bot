@@ -1,0 +1,74 @@
+[
+{
+"id": "1526278695281492001",
+"created_at": "2026-07-13T17:26:37.842000+00:00",
+"author": "Uriel Dolev",
+"text": "https://x.com/anthropicai/status/2076719540785012872?s=46",
+"urls": [
+"https://x.com/anthropicai/status/2076719540785012872?s=46"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
+},
+{
+"id": "1529262851313635379",
+"created_at": "2026-07-21T23:04:36.083000+00:00",
+"author": "LChoshen",
+"text": "Following recent requests, I made a bit of organizing on tools one can use with papers (searching, looking for trends, etc.)\nEnjoy\nhttps://borgr.github.io/paper_updated/",
+"urls": [
+"https://borgr.github.io/paper_updated/"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1503838806451818656"
+},
+{
+"id": "1529825097869951026",
+"created_at": "2026-07-23T12:18:46.108000+00:00",
+"author": "LChoshen",
+"text": "Agentic search harnesses (alphaEvolve and co) have many uncheched components which should be seen as a hyperparameter to tune, no one significantly beats the others (at least with 3m rollouts 😛 )\nFor you agents lovers\nhttps://bsky.app/profile/lchoshen.bsky.social/post/3mrah5xrjn22a",
+"urls": [
+"https://bsky.app/profile/lchoshen.bsky.social/post/3mrah5xrjn22a"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1503838806451818656"
+},
+{
+"id": "1531327174584303626",
+"created_at": "2026-07-27T15:47:29.104000+00:00",
+"author": "LChoshen",
+"text": "Multilingual cultural dataset\n6 european languages\nhttps://arxiv.org/abs/2607.21445\nmany multiple choice hard cultural QA in 288 topics (3k questions)",
+"urls": [
+"https://arxiv.org/abs/2607.21445"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
+},
+{
+"id": "1531649302890414190",
+"created_at": "2026-07-28T13:07:30.477000+00:00",
+"author": "LChoshen",
+"text": "Cohere is another known group known in making huge efforts with many people, seems like this is their latest:\nI cannot be translated.\nI cannot be web-searched.\nI only make sense if you grew up where I did.\nWhat am I?\n\nA good riddle.\n\nWe're building a multicultural benchmark of culturally grounded riddles from communities around the world. We're not looking for translators: we're looking for locals. Come stump the machines and ensure your culture is represented in the next chapter.\n\nJoin our server to get involved: https://discord.gg/RhNX2STPj",
+"urls": [
+"https://discord.gg/RhNX2STPj"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
+},
+{
+"id": "1533087668370538576",
+"created_at": "2026-08-01T12:23:03.531000+00:00",
+"author": "LChoshen",
+"text": "https://x.com/i/status/2083255427421134891",
+"urls": [
+"https://x.com/i/status/2083255427421134891"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
+}
+]
