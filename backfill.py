@@ -38,11 +38,13 @@ for i, a in enumerate(argv):
         SINCE_DAYS = int(argv[i + 1])
     if a == "--exclude-substr" and i + 1 < len(argv):
         EXCLUDE_SUBSTR = argv[i + 1]
-DO_SEMBLE = RUN in ("semble", "both")
-DO_BLUESKY = RUN in ("bluesky", "both")
+DO_SEMBLE = RUN in ("semble", "both", "all")
+DO_BLUESKY = RUN in ("bluesky", "both", "all")
+DO_MASTODON = RUN in ("mastodon", "both", "all")
 AFTER = (datetime.now(timezone.utc) - timedelta(days=SINCE_DAYS)) if SINCE_DAYS else None
 
 LEDGER_PATH = "backfill_done.json"
+FEED_PATH = "feed_items.json"    # content archive that build_feed.py renders into docs/
 
 
 def load_ledger():
@@ -56,6 +58,32 @@ def load_ledger():
 
 def save_ledger(ledger):
     json.dump([list(x) for x in ledger], open(LEDGER_PATH, "w"))
+
+
+def update_feed_archive(all_msgs):
+    """Upsert every scanned link-message into feed_items.json (deduped by id, kept
+    sorted oldest->newest). This is the source build_feed.py renders the RSS/HTML from.
+    Runs every scan so the feed reflects channel history within the window and persists
+    older entries already recorded — independent of what posted to social targets."""
+    try:
+        items = json.load(open(FEED_PATH))
+    except Exception:
+        items = []
+    by_id = {str(it["id"]): it for it in items}
+    for m, urls in all_msgs:
+        by_id[str(m.id)] = {
+            "id": str(m.id),
+            "created_at": m.created_at.isoformat(),
+            "author": m.author.display_name,
+            "text": m.content or "",
+            "urls": list(dict.fromkeys(urls)),
+            "channel": m.channel.name,
+            "guild_id": str(m.guild.id) if m.guild else "",
+            "channel_id": str(m.channel.id),
+        }
+    merged = sorted(by_id.values(), key=lambda it: it["created_at"])
+    json.dump(merged, open(FEED_PATH, "w"), ensure_ascii=False, indent=0)
+    return len(merged)
 
 
 ledger = load_ledger()
@@ -94,7 +122,7 @@ async def collect(channel):
 
 @client.event
 async def on_ready():
-    global bsky, DO_SEMBLE
+    global bsky, DO_SEMBLE, DO_MASTODON
     print(f"[OK] Logged in as {client.user}")
     chans = [c for g in client.guilds for c in g.text_channels
              if relay.CHANNEL_MATCH in c.name.lower()]
@@ -111,6 +139,11 @@ async def on_ready():
     multi = sum(1 for _, u in all_msgs if len(u) > 1)
     print(f"\nTOTAL: {len(all_msgs)} link-messages | {total_urls} links | "
           f"{with_img} with image(s) | {multi} with multiple links")
+
+    # Always refresh the feed archive (independent of posting) so the RSS/HTML feed
+    # reflects the channel even on scan-only runs.
+    n_feed = update_feed_archive(all_msgs)
+    print(f"[feed] archive now holds {n_feed} item(s) -> {FEED_PATH}")
 
     print("--- sample: oldest 3 ---")
     for m, u in all_msgs[:3]:
@@ -136,7 +169,8 @@ async def on_ready():
         await client.close()
         return
 
-    print(f"\nPOSTING (semble={DO_SEMBLE}, bluesky={DO_BLUESKY}, max={MAX}) ...")
+    print(f"\nPOSTING (semble={DO_SEMBLE}, bluesky={DO_BLUESKY}, "
+          f"mastodon={DO_MASTODON and relay.MASTODON_ENABLE}, max={MAX}) ...")
     relay.DRY_RUN = False
 
     # Preflight: verify credentials up front so a bad key fails fast and loudly
@@ -150,6 +184,17 @@ async def on_ready():
             _fail(f"Semble preflight failed ({detail}) — set a fresh SEMBLE_API_KEY; "
                   "continuing with Bluesky only")
             DO_SEMBLE = False
+    if DO_MASTODON and not relay.MASTODON_ENABLE:
+        DO_MASTODON = False              # no token configured -> dormant, skip silently
+    elif DO_MASTODON:
+        ok, detail = relay.mastodon_check()
+        print(f"[preflight] Mastodon: {detail}")
+        if not ok:
+            _fail(f"Mastodon preflight failed ({detail}) — check MASTODON_ACCESS_TOKEN; "
+                  "continuing without it")
+            DO_MASTODON = False
+        else:
+            relay.mastodon_ensure_bot()
     if DO_BLUESKY:
         from atproto import Client as BskyClient
         try:
@@ -162,7 +207,7 @@ async def on_ready():
         relay.bsky = bsky  # make_embed / post_to_bluesky use this
         print("[OK] Bluesky logged in")
 
-    posted = semble_fail = bluesky_fail = 0
+    posted = semble_fail = bluesky_fail = mastodon_fail = mastodon_posted = 0
     for m, urls in all_msgs:
         if MAX is not None and posted >= MAX:
             print(f"[stop] reached --max {MAX}")
@@ -188,6 +233,23 @@ async def on_ready():
             except Exception as e:
                 print(f"  [bluesky][ERR] msg {m.id}: {e}")
                 bluesky_fail += 1
+        if DO_MASTODON and ("mastodon", str(m.id)) not in ledger:
+            if mastodon_posted >= relay.MASTODON_MAX_PER_RUN:
+                pass  # drip cap hit: leave unledgered so the backlog continues next run
+            else:
+                try:
+                    relay.post_to_mastodon(m, urls, author)
+                    ledger.add(("mastodon", str(m.id)))
+                    mastodon_posted += 1
+                    print(f"  [mastodon] posted msg {m.id} ({author})")
+                    did_any = True
+                except relay.MastodonAuthError as e:
+                    _fail(f"Mastodon rejected the token mid-run — rotate MASTODON_ACCESS_TOKEN: {e}")
+                    DO_MASTODON = False
+                    mastodon_fail += 1
+                except Exception as e:
+                    print(f"  [mastodon][ERR] msg {m.id}: {e}")
+                    mastodon_fail += 1
         if did_any:
             posted += 1
             save_ledger(ledger)
@@ -195,7 +257,8 @@ async def on_ready():
 
     save_ledger(ledger)
     summary = (f"posted={posted}  semble_fail={semble_fail}  "
-               f"bluesky_fail={bluesky_fail}  ledger={len(ledger)}")
+               f"bluesky_fail={bluesky_fail}  mastodon_fail={mastodon_fail}  "
+               f"mastodon_posted={mastodon_posted}  ledger={len(ledger)}")
     print(f"\nDONE. {summary}")
     step = os.environ.get("GITHUB_STEP_SUMMARY")
     if step:

@@ -20,6 +20,7 @@ import re
 import json
 import time
 import html
+import uuid
 import urllib.request
 import urllib.error
 from urllib.parse import urlparse
@@ -64,6 +65,19 @@ SEMBLE_LIST_MINE = "https://api.semble.so/api/network.cosmik.collection.listMine
 # Post to Bluesky? (separate toggle so you can run Semble-only or Bluesky-only)
 BLUESKY_ENABLE = os.environ.get("BLUESKY_ENABLE", "1") not in ("0", "false", "")
 
+# Mastodon (e.g. sigmoid.social) — free, open API. Activates only when a token is set,
+# so it stays dormant until you paste one in. Token from: Preferences -> Development ->
+# New application (scopes: write:statuses, write:media, write:accounts / profile).
+MASTODON_BASE = os.environ.get("MASTODON_BASE_URL", "https://sigmoid.social").rstrip("/")
+MASTODON_TOKEN = os.environ.get("MASTODON_ACCESS_TOKEN", "")
+MASTODON_ENABLE = bool(MASTODON_TOKEN) and \
+    os.environ.get("MASTODON_ENABLE", "1") not in ("0", "false", "")
+MASTODON_LIMIT = int(os.environ.get("MASTODON_LIMIT", "480"))     # margin under the 500 cap
+# Drip cap: cap Mastodon posts per run so a backlog trickles out instead of flooding the
+# public timeline (sigmoid rule). Steady state is ~0-1/run, so this only bites on catch-up.
+MASTODON_MAX_PER_RUN = int(os.environ.get("MASTODON_MAX_PER_RUN", "8"))
+MASTODON_URL_LEN = 23    # Mastodon counts every URL as 23 chars regardless of length
+
 LIMIT = 290          # leave margin under Bluesky's 300-grapheme cap
 MAX_IMAGES = 4       # Bluesky max images per post
 URL_RE = re.compile(r"https?://[^\s<>()]+[^\s<>().,!?;:'\"]")
@@ -85,10 +99,18 @@ ABBREV = {"e.g", "i.e", "eg", "ie", "al", "et", "fig", "vs", "dr", "mr", "mrs",
           "pp", "approx", "resp", "inc", "ltd", "figs", "eqs"}
 
 
-def _url_reductions(text):
-    """(start, end, saved) per URL: how many chars its shortened display saves,
-    so a very long URL (e.g. a Scholar alert link) doesn't force a needless split."""
-    return [(m.start(), m.end(), len(m.group(0)) - len(display_for(m.group(0))))
+def _default_url_eff(u):
+    """Bluesky: a URL costs its shortened *display* length."""
+    return len(display_for(u))
+
+
+def _url_reductions(text, url_eff=None):
+    """(start, end, saved) per URL: full length minus its *effective* (counted) length,
+    so a very long URL (e.g. a Scholar alert link) doesn't force a needless split.
+    `url_eff(url)->int` defaults to Bluesky's shortened display; Mastodon passes a flat 23."""
+    if url_eff is None:
+        url_eff = _default_url_eff
+    return [(m.start(), m.end(), len(m.group(0)) - url_eff(m.group(0)))
             for m in URL_RE.finditer(text)]
 
 
@@ -144,31 +166,34 @@ def _boundaries(text, red):
     return out
 
 
-def chunk_text(text, reserve=0):
-    """Split into <=LIMIT posts, preferring sentence > clause > word breaks and
+def chunk_text(text, reserve=0, limit=None, url_eff=None):
+    """Split into <=limit posts, preferring sentence > clause > word breaks and
     balancing sizes so a thread doesn't end in a tiny orphan. `reserve` chars are
-    kept free on the LAST post (for the author suffix)."""
+    kept free on the LAST post (for the author suffix). `limit`/`url_eff` default to
+    Bluesky (290 chars, shortened-URL display); Mastodon passes 480 and a flat-23 url_eff."""
+    if limit is None:
+        limit = LIMIT
     text = text.strip()
     if not text:
         return [""]
-    red = _url_reductions(text)
-    if _eff(text, 0, len(text), red) <= LIMIT:
+    red = _url_reductions(text, url_eff)
+    if _eff(text, 0, len(text), red) <= limit:
         chunks = [text]
     else:
         bounds = _boundaries(text, red)
         chunks, start = [], 0
         while start < len(text):
-            if _eff(text, start, len(text), red) <= LIMIT:   # remainder fits
+            if _eff(text, start, len(text), red) <= limit:   # remainder fits
                 chunks.append(text[start:].strip())
                 break
             remaining = _eff(text, start, len(text), red)
-            target = remaining / (-(-remaining // LIMIT))     # balanced size (ceil posts)
+            target = remaining / (-(-remaining // limit))     # balanced size (ceil posts)
             feasible = [(a, b, p) for (a, b, p) in bounds
                         if a > start < len(text)
-                        and 0 < _eff(text, start, a, red) <= LIMIT]
-            if not feasible:                                  # unbreakable token > LIMIT
-                chunks.append(text[start:start + LIMIT])
-                start += LIMIT
+                        and 0 < _eff(text, start, a, red) <= limit]
+            if not feasible:                                  # unbreakable token > limit
+                chunks.append(text[start:start + limit])
+                start += limit
                 continue
             accept = [x for x in feasible
                       if _eff(text, start, x[0], red) >= target * 0.6]  # not too short
@@ -180,7 +205,7 @@ def chunk_text(text, reserve=0):
         chunks = [""]
     # keep room for the author suffix on the last post
     last = chunks[-1]
-    if reserve and last and _eff(last, 0, len(last), _url_reductions(last)) + reserve > LIMIT:
+    if reserve and last and _eff(last, 0, len(last), _url_reductions(last, url_eff)) + reserve > limit:
         chunks.append("")
     return chunks
 
@@ -344,6 +369,160 @@ def post_to_bluesky(message, urls, author):
     return len(chunks)
 
 
+# ---------- mastodon (sigmoid.social & any Mastodon instance) ----------
+class MastodonError(Exception):
+    """Mastodon API returned an error."""
+
+
+class MastodonAuthError(MastodonError):
+    """Token invalid/expired (401/403) or lacks scope. Systemic, not per-post."""
+
+
+def _mastodon_eff(u):
+    return MASTODON_URL_LEN
+
+
+def _multipart(file_field, filename, mime, data, fields=None):
+    """Build a multipart/form-data body. Returns (bytes, content_type)."""
+    boundary = uuid.uuid4().hex
+    nl = b"\r\n"
+    buf = []
+    for k, v in (fields or {}).items():
+        buf += [b"--", boundary.encode(), nl,
+                f'Content-Disposition: form-data; name="{k}"'.encode(), nl, nl,
+                str(v).encode(), nl]
+    buf += [b"--", boundary.encode(), nl,
+            f'Content-Disposition: form-data; name="{file_field}"; filename="{filename}"'.encode(), nl,
+            f"Content-Type: {mime}".encode(), nl, nl, data, nl,
+            b"--", boundary.encode(), b"--", nl]
+    return b"".join(buf), f"multipart/form-data; boundary={boundary}"
+
+
+def _mastodon_request(path, method="GET", body=None, raw=None, content_type=None,
+                      timeout=45, retries=2):
+    """Call the Mastodon API. Retries transient (5xx / network / timeout) with backoff;
+    raises MastodonAuthError on 401/403; re-raises other 4xx."""
+    url = MASTODON_BASE + path
+    headers = {"Authorization": f"Bearer {MASTODON_TOKEN}", **UA}
+    data = None
+    if raw is not None:
+        data = raw
+        if content_type:
+            headers["Content-Type"] = content_type
+    elif body is not None:
+        headers["Content-Type"] = "application/json"
+        data = json.dumps(body).encode("utf-8")
+    last = None
+    for attempt in range(retries + 1):
+        req = urllib.request.Request(url, data=data, method=method, headers=headers)
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                payload = r.read().decode("utf-8", "ignore")
+                return json.loads(payload) if payload else {}
+        except urllib.error.HTTPError as e:
+            if e.code in (401, 403):
+                raise MastodonAuthError(f"HTTP {e.code} — Mastodon token invalid/expired or missing scope")
+            if e.code < 500:
+                detail = ""
+                try:
+                    detail = e.read().decode("utf-8", "ignore")[:200]
+                except Exception:
+                    pass
+                raise MastodonError(f"HTTP {e.code} {detail}")
+            last = e
+        except (urllib.error.URLError, TimeoutError, OSError) as e:
+            last = e
+        if attempt < retries:
+            time.sleep(2 * (attempt + 1))
+    raise last
+
+
+def mastodon_check():
+    """Preflight: verify the token works. Returns (ok: bool, detail: str)."""
+    if not MASTODON_ENABLE:
+        return True, "disabled"
+    try:
+        acct = _mastodon_request("/api/v1/accounts/verify_credentials", "GET",
+                                 timeout=20, retries=1)
+        return True, f"ok (@{acct.get('username', '?')} on {MASTODON_BASE})"
+    except MastodonAuthError as e:
+        return False, str(e)
+    except Exception as e:
+        return False, f"unreachable: {e}"
+
+
+def mastodon_ensure_bot():
+    """Mark the account as a bot (sigmoid rule: software-driven accounts must be
+    identified as bots). Idempotent, best-effort — never blocks posting."""
+    if not MASTODON_ENABLE:
+        return
+    try:
+        _mastodon_request("/api/v1/accounts/update_credentials", "PATCH",
+                          body={"bot": True}, timeout=20, retries=1)
+    except Exception as e:
+        print(f"  [mastodon] could not set bot flag: {e}")
+
+
+def _mastodon_media(message):
+    """Upload image attachments; returns a list of media ids (best-effort — a failed
+    upload is skipped, never blocks the post). Handles async (202) processing."""
+    ids = []
+    images = [a for a in message.attachments
+              if (a.content_type or "").startswith("image/")]
+    for a in images[:MAX_IMAGES]:
+        data = download(a.url)
+        if not data:
+            continue
+        try:
+            raw, ctype = _multipart("file", getattr(a, "filename", None) or "image",
+                                    a.content_type or "image/png", data,
+                                    {"description": a.description or ""})
+            res = _mastodon_request("/api/v2/media", "POST", raw=raw,
+                                    content_type=ctype, timeout=90)
+            mid = res.get("id")
+            if mid and not res.get("url"):        # 202 accepted -> still processing
+                for _ in range(6):
+                    time.sleep(2)
+                    chk = _mastodon_request(f"/api/v1/media/{mid}", "GET", timeout=30, retries=1)
+                    if chk.get("url"):
+                        break
+            if mid:
+                ids.append(mid)
+        except MastodonAuthError:
+            raise
+        except Exception as e:
+            print(f"  [mastodon][media] skip {getattr(a, 'filename', '?')}: {e}")
+    return ids
+
+
+def post_to_mastodon(message, urls, author):
+    """Post a message to Mastodon as a thread. Root is public; thread replies are
+    `unlisted` so a multi-post message doesn't flood the public timeline. Returns #posts."""
+    suffix = f"\n— {author}" if INCLUDE_AUTHOR else ""
+    chunks = chunk_text(message.content, reserve=len(suffix),
+                        limit=MASTODON_LIMIT, url_eff=_mastodon_eff)
+    if suffix:
+        last = chunks[-1]
+        red = _url_reductions(last, _mastodon_eff)
+        if _eff(last, 0, len(last), red) + len(suffix) <= MASTODON_LIMIT:
+            chunks[-1] = last + suffix
+    if DRY_RUN:
+        print(f"  [mastodon] would post {len(chunks)} status(es) to {MASTODON_BASE}")
+        return len(chunks)
+    media_ids = _mastodon_media(message) if INCLUDE_IMAGES else []
+    reply_to = None
+    for i, c in enumerate(chunks):
+        body = {"status": c, "visibility": "public" if i == 0 else "unlisted"}
+        if reply_to:
+            body["in_reply_to_id"] = reply_to
+        if i == 0 and media_ids:
+            body["media_ids"] = media_ids
+        res = _mastodon_request("/api/v1/statuses", "POST", body=body, timeout=45)
+        reply_to = res.get("id")
+        time.sleep(1)  # gentle pacing
+    return len(chunks)
+
+
 # ---------- discord ----------
 intents = discord.Intents.default()
 intents.message_content = True
@@ -364,12 +543,16 @@ async def on_ready():
     if not matched:
         print(f"[WARN] No channels matched '{CHANNEL_MATCH}'.")
     print(f"[CFG] Bluesky={'on' if BLUESKY_ENABLE else 'off'}  "
-          f"Semble={'on -> ' + str(SEMBLE_COLLECTION_IDS) if SEMBLE_ENABLE else 'off'}")
+          f"Semble={'on -> ' + str(SEMBLE_COLLECTION_IDS) if SEMBLE_ENABLE else 'off'}  "
+          f"Mastodon={'on -> ' + MASTODON_BASE if MASTODON_ENABLE else 'off'}")
     if not DRY_RUN and BLUESKY_ENABLE:
         from atproto import Client as BskyClient
         bsky = BskyClient(base_url=ATPROTO_PDS)
         bsky.login(ATPROTO_HANDLE, ATPROTO_APP_PASSWORD)
         print(f"[OK] Bluesky logged in as {ATPROTO_HANDLE} via {ATPROTO_PDS}")
+    if not DRY_RUN and MASTODON_ENABLE:
+        mastodon_ensure_bot()
+        print(f"[OK] Mastodon ready on {MASTODON_BASE}")
     print("Listening. Ctrl+C to stop.\n")
 
 
@@ -425,7 +608,16 @@ async def on_message(message):
     # --- Bluesky (shared code path with the scheduled catch-up) ---
     if BLUESKY_ENABLE and not DRY_RUN:
         n = post_to_bluesky(message, urls, author)
-        print(f"  [bluesky] posted {n} post(s)\n")
+        print(f"  [bluesky] posted {n} post(s)")
+
+    # --- Mastodon ---
+    if MASTODON_ENABLE and not DRY_RUN:
+        try:
+            n = post_to_mastodon(message, urls, author)
+            print(f"  [mastodon] posted {n} post(s)")
+        except Exception as e:
+            print(f"  [mastodon][ERR] {e}")
+    print()
 
 
 if __name__ == "__main__":

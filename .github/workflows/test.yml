@@ -23,6 +23,7 @@ jobs:
         run: |
           python test_chunking.py
           python test_semble.py
+          python test_mastodon.py
 
       - name: Notify Discord on failure
         if: failure()

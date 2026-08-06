@@ -3,6 +3,8 @@
 Relays links shared in the CoLab Discord `#papers-links-n-sharing` channels to:
 - **Bluesky** — posts to [@colab-links.bsky.social](https://bsky.app/profile/colab-links.bsky.social)
 - **Semble** — adds cards to the *CoLab Links* collection
+- **Mastodon** — posts to a [sigmoid.social](https://sigmoid.social) account (off until a token is set)
+- **RSS/Atom feed + web page** — published at https://borgr.github.io/ATProto-links-bot/
 
 ## How it runs (recommended: zero-maintenance)
 
@@ -29,19 +31,47 @@ owner. That's the only monitoring you need.
 ## Files
 | File | Purpose |
 |---|---|
-| `relay.py` | Config + helpers, and an optional **always-on** live listener (real-time). Not needed if you use the scheduled Action. |
+| `relay.py` | Config + helpers (Bluesky, Semble, Mastodon), and an optional **always-on** live listener (real-time). Not needed if you use the scheduled Action. |
 | `backfill.py` | The catch-up/import job the Action runs. Flags below. |
+| `build_feed.py` | Renders `feed_items.json` into `docs/feed.xml` (Atom) + `docs/index.html`. |
 | `service.sh` | Manage the optional macOS LaunchAgent (laptop always-on mode). |
 | `backfill_done.json` | De-dupe ledger (committed, persists state). |
+| `feed_items.json` | Content archive the feed is built from (committed, persists state). |
+| `docs/` | Published site (GitHub Pages): the RSS/Atom feed + browsable HTML list. |
 
 ### `backfill.py` flags
 ```
---run semble|bluesky|both   which target(s) to post to
+--run semble|bluesky|mastodon|all   which target(s) to post to ("both"/"all" = all enabled)
 --since-days N              only scan the last N days (default: all history)
 --max N                     cap messages posted this run
 --exclude-substr "..."      skip messages containing this text (used to skip a test post)
 --seed-only                 mark current history as done WITHOUT posting (cutover helper)
 ```
+
+## Mastodon (sigmoid.social)
+
+The Mastodon target is **off until you set a token** — no token means the target is
+silently skipped, so nothing breaks. To turn it on:
+
+1. Create/choose a dedicated account on [sigmoid.social](https://sigmoid.social)
+   (its rules require software-driven accounts to be marked as bots — the relay sets the
+   bot flag automatically on first run).
+2. **Preferences → Development → New application**, scopes `write:statuses`, `write:media`,
+   `write:accounts`. Copy the **access token**.
+3. Add it as GitHub secret `MASTODON_ACCESS_TOKEN` (and to local `.env` for `check_keys.py`).
+
+Behavior: 500-char posts, threads posted as `unlisted` replies (root stays public) so a long
+message doesn't flood the timeline, and a **drip cap** (`MASTODON_MAX_PER_RUN`, default 8)
+so a backlog trickles out over successive runs rather than all at once. Point it at any
+other instance with `MASTODON_BASE_URL`.
+
+## RSS/Atom feed + web page
+
+Every run refreshes `feed_items.json` (a content archive of scanned link-messages) and
+`build_feed.py` renders it into `docs/feed.xml` (Atom) and `docs/index.html`, published via
+GitHub Pages at **https://borgr.github.io/ATProto-links-bot/**. No account, no cost, nothing
+to expire — anyone can subscribe in a feed reader or bridge it elsewhere. The feed's
+`<updated>` is the newest item's timestamp, so runs with no new links produce no commit.
 
 ## Maintenance & troubleshooting
 

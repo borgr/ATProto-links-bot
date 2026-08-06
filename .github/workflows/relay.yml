@@ -22,27 +22,35 @@ jobs:
           python-version: "3.11"
       - run: pip install -r requirements.txt
 
-      - name: Catch up new links -> Bluesky + Semble
+      - name: Catch up new links -> Bluesky + Semble + Mastodon
         env:
           # secrets
           DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
           ATPROTO_APP_PASSWORD: ${{ secrets.ATPROTO_APP_PASSWORD }}
           SEMBLE_API_KEY: ${{ secrets.SEMBLE_API_KEY }}
+          # Mastodon: dormant until this secret is set (no token -> target is skipped)
+          MASTODON_ACCESS_TOKEN: ${{ secrets.MASTODON_ACCESS_TOKEN }}
           # non-secret config
           ATPROTO_HANDLE: colab-links.bsky.social
           ATPROTO_PDS: https://bsky.social
           SEMBLE_COLLECTION_IDS: 065840e8-3d9c-4d1b-9f98-c200218a74ed
+          MASTODON_BASE_URL: https://sigmoid.social
           DISCORD_CHANNEL_MATCH: papers-links-n-sharing
         run: |
-          python backfill.py --run both --since-days 30 \
+          python backfill.py --run all --since-days 30 \
             --exclude-substr "making the links shared outside of discord"
 
-      - name: Persist de-dupe ledger
+      - name: Build RSS/Atom feed + HTML page
+        env:
+          PAGES_BASE_URL: https://borgr.github.io/ATProto-links-bot
+        run: python build_feed.py
+
+      - name: Persist ledger + feed
         run: |
           git config user.name "relay-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add backfill_done.json
-          git diff --staged --quiet || git commit -m "update ledger [skip ci]"
+          git add backfill_done.json feed_items.json docs
+          git diff --staged --quiet || git commit -m "update ledger + feed [skip ci]"
           git push
 
       - name: Notify Discord on failure

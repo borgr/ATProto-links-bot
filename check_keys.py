@@ -20,6 +20,13 @@ def main():
     ok, detail = relay.semble_check()
     print(f"Semble  {mask(relay.SEMBLE_API_KEY)}: {'OK' if ok else 'FAIL'} — {detail}")
 
+    # Mastodon (off unless a token is configured)
+    if relay.MASTODON_ENABLE:
+        ok, detail = relay.mastodon_check()
+        print(f"Mastodon {mask(relay.MASTODON_TOKEN)}: {'OK' if ok else 'FAIL'} — {detail}")
+    else:
+        print("Mastodon: (no MASTODON_ACCESS_TOKEN — target off)")
+
     # Bluesky
     if relay.ATPROTO_HANDLE and relay.ATPROTO_APP_PASSWORD:
         try:
