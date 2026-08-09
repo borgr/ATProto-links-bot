@@ -122,7 +122,7 @@ async def collect(channel):
 
 @client.event
 async def on_ready():
-    global bsky, DO_SEMBLE, DO_MASTODON
+    global bsky, DO_SEMBLE, DO_BLUESKY, DO_MASTODON
     print(f"[OK] Logged in as {client.user}")
     chans = [c for g in client.guilds for c in g.text_channels
              if relay.CHANNEL_MATCH in c.name.lower()]
@@ -197,15 +197,31 @@ async def on_ready():
             relay.mastodon_ensure_bot()
     if DO_BLUESKY:
         from atproto import Client as BskyClient
-        try:
-            bsky = BskyClient(base_url=relay.ATPROTO_PDS)
-            bsky.login(relay.ATPROTO_HANDLE, relay.ATPROTO_APP_PASSWORD)
-        except Exception as e:
-            _fail(f"Bluesky login failed: {e}")
-            await client.close()
-            return
-        relay.bsky = bsky  # make_embed / post_to_bluesky use this
-        print("[OK] Bluesky logged in")
+        # bsky.social's login endpoint occasionally returns a transient 5xx / rate-limit
+        # (surfaces as an exception with an empty message). Retry with backoff instead of
+        # failing the whole run on a one-off blip — mirrors the Semble retry policy.
+        err = None
+        for attempt in range(3):
+            try:
+                bsky = BskyClient(base_url=relay.ATPROTO_PDS)
+                bsky.login(relay.ATPROTO_HANDLE, relay.ATPROTO_APP_PASSWORD)
+                err = None
+                break
+            except Exception as e:
+                err, bsky = e, None
+                if attempt < 2:
+                    time.sleep(3 * (attempt + 1))
+        if bsky is None:
+            # Degrade, don't abort: a transient Bluesky outage must not also block
+            # Semble/Mastodon this cycle. _fail() still exits non-zero -> the alert fires,
+            # and unposted links stay unledgered so they retry next run.
+            detail = f"{type(err).__name__}: {err}".strip(": ") if err else "unknown error"
+            _fail(f"Bluesky login failed after 3 attempts ({detail}) — likely a transient "
+                  "bsky.social outage; continuing with other targets this cycle")
+            DO_BLUESKY = False
+        else:
+            relay.bsky = bsky  # make_embed / post_to_bluesky use this
+            print("[OK] Bluesky logged in")
 
     posted = semble_fail = bluesky_fail = mastodon_fail = mastodon_posted = 0
     for m, urls in all_msgs:
