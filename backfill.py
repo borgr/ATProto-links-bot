@@ -179,10 +179,11 @@ async def on_ready():
         ok, detail = relay.semble_check()
         print(f"[preflight] Semble key: {detail}")
         if not ok:
-            # Degrade, don't abort: a dead Semble key must not stop Bluesky too.
+            # Degrade, don't abort: a dead Semble credential must not stop Bluesky too.
             # _fail() still makes the run exit non-zero, so the alert fires.
-            _fail(f"Semble preflight failed ({detail}) — set a fresh SEMBLE_API_KEY; "
-                  "continuing with Bluesky only")
+            _hint = ("check SEMBLE_APP_PASSWORD (create a fresh Bluesky App Password)"
+                     if relay.SEMBLE_SESSION_AUTH else "set a fresh SEMBLE_API_KEY")
+            _fail(f"Semble preflight failed ({detail}) — {_hint}; continuing with Bluesky only")
             DO_SEMBLE = False
     if DO_MASTODON and not relay.MASTODON_ENABLE:
         DO_MASTODON = False              # no token configured -> dormant, skip silently
@@ -238,7 +239,9 @@ async def on_ready():
             else:
                 semble_fail += 1
                 if auth_failed:                 # systemic: stop Semble, keep Bluesky
-                    _fail("Semble rejected the API key mid-run — rotate SEMBLE_API_KEY")
+                    _hint = ("check SEMBLE_APP_PASSWORD" if relay.SEMBLE_SESSION_AUTH
+                             else "rotate SEMBLE_API_KEY")
+                    _fail(f"Semble rejected our credentials mid-run — {_hint}")
                     DO_SEMBLE = False
         if DO_BLUESKY and ("bluesky", str(m.id)) not in ledger:
             try:

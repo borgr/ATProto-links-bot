@@ -16,9 +16,13 @@ def mask(s):
 
 
 def main():
-    # Semble
+    # Semble (session auth verifies WRITE access; key auth only checks reads)
     ok, detail = relay.semble_check()
-    print(f"Semble  {mask(relay.SEMBLE_API_KEY)}: {'OK' if ok else 'FAIL'} — {detail}")
+    if relay.SEMBLE_SESSION_AUTH:
+        cred = f"session {relay.SEMBLE_HANDLE} / {mask(relay.SEMBLE_APP_PASSWORD)}"
+    else:
+        cred = f"key {mask(relay.SEMBLE_API_KEY)}"
+    print(f"Semble  {cred}: {'OK' if ok else 'FAIL'} — {detail}")
 
     # Mastodon (off unless a token is configured)
     if relay.MASTODON_ENABLE:

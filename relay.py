@@ -23,6 +23,7 @@ import html
 import uuid
 import urllib.request
 import urllib.error
+import http.cookiejar
 from urllib.parse import urlparse
 
 import discord
@@ -54,13 +55,24 @@ ATPROTO_HANDLE = os.environ.get("ATPROTO_HANDLE", "")
 ATPROTO_APP_PASSWORD = os.environ.get("ATPROTO_APP_PASSWORD", "")
 ATPROTO_PDS = os.environ.get("ATPROTO_PDS", "https://bsky.social")
 
-# Semble (network.cosmik) — add each shared link as a card to one or more collections
+# Semble (network.cosmik) — add each shared link as a card to one or more collections.
+# Two auth modes, session preferred:
+#   1. App-password SESSION (durable): SEMBLE_HANDLE + SEMBLE_APP_PASSWORD -> createSession
+#      mints a fresh cookie session each run. This is the reliable path: sk_ "API keys"
+#      silently ride on a login session that Semble's backend deletes, after which reads
+#      keep working but WRITES 401 ("session was deleted by another process"). Minting a
+#      new session per run self-heals that. A 401 mid-run re-logs in once and retries.
+#   2. Legacy Bearer sk_ key (fallback): used only when no app password is configured.
 SEMBLE_API_KEY = os.environ.get("SEMBLE_API_KEY", "")
+SEMBLE_HANDLE = os.environ.get("SEMBLE_HANDLE", "")          # collection owner, e.g. lchoshen.bsky.social
+SEMBLE_APP_PASSWORD = os.environ.get("SEMBLE_APP_PASSWORD", "")
 SEMBLE_COLLECTION_IDS = [c.strip() for c in os.environ.get("SEMBLE_COLLECTION_IDS", "").split(",") if c.strip()]
-SEMBLE_ENABLE = bool(SEMBLE_API_KEY and SEMBLE_COLLECTION_IDS) and \
+SEMBLE_SESSION_AUTH = bool(SEMBLE_HANDLE and SEMBLE_APP_PASSWORD)   # prefer session over sk_ key
+SEMBLE_ENABLE = bool(SEMBLE_COLLECTION_IDS and (SEMBLE_SESSION_AUTH or SEMBLE_API_KEY)) and \
     os.environ.get("SEMBLE_ENABLE", "1") not in ("0", "false", "")
 SEMBLE_ADD_URL = "https://api.semble.so/api/network.cosmik.card.addUrl"
 SEMBLE_LIST_MINE = "https://api.semble.so/api/network.cosmik.collection.listMine"
+SEMBLE_CREATE_SESSION = "https://api.semble.so/api/network.cosmik.server.createSession"
 
 # Post to Bluesky? (separate toggle so you can run Semble-only or Bluesky-only)
 BLUESKY_ENABLE = os.environ.get("BLUESKY_ENABLE", "1") not in ("0", "false", "")
@@ -272,26 +284,76 @@ def download(url, cap=2_000_000):
 
 
 class SembleAuthError(Exception):
-    """Semble rejected the API key (401/403). Systemic — not a per-URL problem."""
+    """Semble rejected our credentials (401/403). Systemic — not a per-URL problem."""
+
+
+# Cookie-backed opener for session auth (mode 1). Lazily created by _semble_login().
+_semble_opener = None
+
+
+def _semble_login():
+    """Mint a fresh Semble session from the app password and return a cookie-backed
+    opener authorized for WRITES. Raises SembleAuthError if the handle/app-password
+    is rejected. (Semble's createSession sets accessToken + refreshToken cookies.)"""
+    global _semble_opener
+    jar = http.cookiejar.CookieJar()
+    opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar))
+    body = json.dumps({"identifier": SEMBLE_HANDLE, "appPassword": SEMBLE_APP_PASSWORD}).encode("utf-8")
+    req = urllib.request.Request(SEMBLE_CREATE_SESSION, data=body, method="POST",
+                                 headers={"Content-Type": "application/json", **UA})
+    try:
+        with opener.open(req, timeout=45) as r:
+            r.read()
+    except urllib.error.HTTPError as e:
+        if e.code in (400, 401, 403):
+            raise SembleAuthError(f"createSession HTTP {e.code} — SEMBLE_HANDLE / "
+                                  "SEMBLE_APP_PASSWORD rejected (create a fresh Bluesky App Password)")
+        raise
+    _semble_opener = opener
+    return opener
+
+
+def _semble_http(url, method, data, timeout):
+    """One authenticated Semble call. Session mode uses the cookie opener; key mode uses
+    the sk_ Bearer header. Raises urllib errors to the caller for retry/re-login logic."""
+    headers = {**UA}
+    if data is not None:
+        headers["Content-Type"] = "application/json"
+    if SEMBLE_SESSION_AUTH:
+        opener = _semble_opener or _semble_login()
+        req = urllib.request.Request(url, data=data, method=method, headers=headers)
+        with opener.open(req, timeout=timeout) as r:
+            return json.loads(r.read().decode("utf-8", "ignore"))
+    headers["Authorization"] = f"Bearer {SEMBLE_API_KEY}"
+    req = urllib.request.Request(url, data=data, method=method, headers=headers)
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        return json.loads(r.read().decode("utf-8", "ignore"))
 
 
 def _semble_request(url, method="GET", body=None, timeout=90, retries=2):
     """Call the Semble API. Retries transient (5xx / network / timeout) errors with
-    backoff; raises SembleAuthError on 401/403; re-raises other errors."""
-    headers = {"Authorization": f"Bearer {SEMBLE_API_KEY}", **UA}
-    data = None
-    if body is not None:
-        headers["Content-Type"] = "application/json"
-        data = json.dumps(body).encode("utf-8")
+    backoff. On 401/403 in session mode, re-logs in ONCE and retries (a session Semble
+    deleted mid-run is recoverable); otherwise raises SembleAuthError."""
+    data = json.dumps(body).encode("utf-8") if body is not None else None
     last = None
+    relogged = False
     for attempt in range(retries + 1):
-        req = urllib.request.Request(url, data=data, method=method, headers=headers)
         try:
-            with urllib.request.urlopen(req, timeout=timeout) as r:
-                return json.loads(r.read().decode("utf-8", "ignore"))
+            return _semble_http(url, method, data, timeout)
         except urllib.error.HTTPError as e:
             if e.code in (401, 403):
-                raise SembleAuthError(f"HTTP {e.code} — Semble API key invalid or expired")
+                if SEMBLE_SESSION_AUTH and not relogged:
+                    relogged = True
+                    _semble_login()          # raises SembleAuthError if app-password is bad
+                    try:                     # immediate retry with the fresh session
+                        return _semble_http(url, method, data, timeout)
+                    except urllib.error.HTTPError as e2:
+                        if e2.code in (401, 403):
+                            raise SembleAuthError(f"HTTP {e2.code} — Semble auth failed after re-login")
+                        raise
+                raise SembleAuthError(
+                    f"HTTP {e.code} — Semble auth failed "
+                    + ("(session/app-password)" if SEMBLE_SESSION_AUTH else "(sk_ API key invalid or expired)"))
             if e.code < 500:            # other 4xx: not retryable
                 raise
             last = e                    # 5xx: retryable
@@ -299,7 +361,7 @@ def _semble_request(url, method="GET", body=None, timeout=90, retries=2):
             last = e                    # network/timeout: retryable
         if attempt < retries:
             time.sleep(2 * (attempt + 1))
-    raise last
+    raise last if last else SembleAuthError("Semble request failed with no response")
 
 
 def semble_add_url(url, note):
@@ -309,12 +371,17 @@ def semble_add_url(url, note):
 
 
 def semble_check():
-    """Preflight: cheaply verify the API key works. Returns (ok: bool, detail: str)."""
+    """Preflight: verify we can actually WRITE. Returns (ok: bool, detail: str).
+    Session mode does a real createSession (the credential writes use), which is why it
+    catches the write-auth failure the old read-only listMine check silently missed."""
     if not SEMBLE_ENABLE:
         return True, "disabled"
     try:
+        if SEMBLE_SESSION_AUTH:
+            _semble_login()
+            return True, f"ok (session as {SEMBLE_HANDLE})"
         _semble_request(SEMBLE_LIST_MINE, "GET", timeout=30, retries=1)
-        return True, "ok"
+        return True, "ok (sk_ key; read-only check — writes not verified)"
     except SembleAuthError as e:
         return False, str(e)
     except Exception as e:
@@ -603,7 +670,8 @@ async def on_message(message):
     # --- Semble ---
     ok, auth_failed = relay_to_semble(message, urls, author)
     if auth_failed:
-        print("  [semble][AUTH] key rejected — set a fresh SEMBLE_API_KEY")
+        _hint = "check SEMBLE_APP_PASSWORD" if SEMBLE_SESSION_AUTH else "set a fresh SEMBLE_API_KEY"
+        print(f"  [semble][AUTH] credentials rejected — {_hint}")
 
     # --- Bluesky (shared code path with the scheduled catch-up) ---
     if BLUESKY_ENABLE and not DRY_RUN:

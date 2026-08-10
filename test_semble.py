@@ -1,8 +1,10 @@
 """Regression tests for Semble error handling — the logic that decides whether a
-run should fail loudly and whether a link gets marked done (and thus not retried).
+run should fail loudly and whether a link gets marked done (and thus not retried),
+plus the app-password session auth (createSession) recovery path.
 
 These use mocks (no network). Run:  python test_semble.py
 """
+import urllib.error
 import relay
 
 
@@ -69,5 +71,68 @@ def main():
     return fails
 
 
+def test_session():
+    """App-password session auth: a 401 mid-run must re-login once and retry (the
+    self-healing behavior), a persistent 401 must raise, and semble_check must do a
+    real createSession (verifying WRITE access, not just reads)."""
+    fails = 0
+
+    def check(name, cond):
+        nonlocal fails
+        print(f"  [{'ok' if cond else 'FAIL'}] {name}")
+        if not cond:
+            fails += 1
+
+    def _http_err(code):
+        return urllib.error.HTTPError("http://x", code, "err", {}, None)
+
+    saved = (relay.SEMBLE_SESSION_AUTH, relay.SEMBLE_ENABLE, relay.SEMBLE_HANDLE,
+             relay._semble_http, relay._semble_login)
+    relay.SEMBLE_SESSION_AUTH = True
+    relay.SEMBLE_ENABLE = True
+    relay.SEMBLE_HANDLE = "test.bsky.social"
+    try:
+        # 401 on first call -> re-login once -> retry succeeds (session Semble deleted mid-run)
+        calls = {"http": 0, "login": 0}
+
+        def http_401_then_ok(url, method, data, timeout):
+            calls["http"] += 1
+            if calls["http"] == 1:
+                raise _http_err(401)
+            return {"urlCardId": "ok"}
+        relay._semble_http = http_401_then_ok
+        relay._semble_login = lambda: calls.__setitem__("login", calls["login"] + 1)
+        res = relay._semble_request("http://x", "POST", {"url": "u"})
+        check("session 401 -> relogin -> retry ok",
+              res == {"urlCardId": "ok"} and calls["login"] == 1 and calls["http"] == 2)
+
+        # persistent 401 even after a fresh session -> SembleAuthError (don't loop forever)
+        relay._semble_http = lambda *a: (_ for _ in ()).throw(_http_err(401))
+        relay._semble_login = lambda: None
+        try:
+            relay._semble_request("http://x", "POST", {"url": "u"})
+            check("session persistent 401 raises", False)
+        except relay.SembleAuthError:
+            check("session persistent 401 raises", True)
+
+        # preflight does a real createSession -> ok, and surfaces the handle
+        relay._semble_login = lambda: None
+        ok, detail = relay.semble_check()
+        check("semble_check session ok (createSession)", ok is True and "session" in detail)
+
+        # bad app password -> createSession raises -> preflight not ok
+        def _bad_login():
+            raise relay.SembleAuthError("createSession HTTP 401 — app password rejected")
+        relay._semble_login = _bad_login
+        ok, _ = relay.semble_check()
+        check("semble_check bad app-password -> not ok", ok is False)
+    finally:
+        (relay.SEMBLE_SESSION_AUTH, relay.SEMBLE_ENABLE, relay.SEMBLE_HANDLE,
+         relay._semble_http, relay._semble_login) = saved
+
+    print(f"\n{'ALL PASS' if fails == 0 else str(fails) + ' FAILURES'} (session)")
+    return fails
+
+
 if __name__ == "__main__":
-    raise SystemExit(1 if main() else 0)
+    raise SystemExit(1 if (main() + test_session()) else 0)

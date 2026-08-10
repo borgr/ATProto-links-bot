@@ -27,12 +27,17 @@ jobs:
           # secrets
           DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
           ATPROTO_APP_PASSWORD: ${{ secrets.ATPROTO_APP_PASSWORD }}
+          # Semble writes ride on a login session; a fresh createSession each run (via the
+          # collection owner's Bluesky App Password) is the durable credential. When this
+          # secret is empty the relay falls back to the legacy sk_ SEMBLE_API_KEY.
+          SEMBLE_APP_PASSWORD: ${{ secrets.SEMBLE_APP_PASSWORD }}
           SEMBLE_API_KEY: ${{ secrets.SEMBLE_API_KEY }}
           # Mastodon: dormant until this secret is set (no token -> target is skipped)
           MASTODON_ACCESS_TOKEN: ${{ secrets.MASTODON_ACCESS_TOKEN }}
           # non-secret config
           ATPROTO_HANDLE: colab-links.bsky.social
           ATPROTO_PDS: https://bsky.social
+          SEMBLE_HANDLE: lchoshen.bsky.social
           SEMBLE_COLLECTION_IDS: 065840e8-3d9c-4d1b-9f98-c200218a74ed
           MASTODON_BASE_URL: https://sigmoid.social
           DISCORD_CHANNEL_MATCH: papers-links-n-sharing
