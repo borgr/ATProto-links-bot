@@ -5,7 +5,15 @@
   <link href="https://borgr.github.io/ATProto-links-bot/feed.xml" rel="self"/>
   <link href="https://borgr.github.io/ATProto-links-bot/"/>
   <id>https://borgr.github.io/ATProto-links-bot/</id>
-  <updated>2026-08-09T13:36:08Z</updated>
+  <updated>2026-08-14T11:09:29Z</updated>
+  <entry>
+    <title>Interesting discussion,</title>
+    <link href="https://x.com/i/status/2082882703024927088"/>
+    <id>tag:atproto-links-bot,1537780195845734432</id>
+    <updated>2026-08-14T11:09:29Z</updated>
+    <author><name>LChoshen</name></author>
+    <content type="html">&lt;p&gt;Interesting discussion,&lt;br&gt;Tldr Claude has much less tokens (15k?!) than any other and less as versions go, it appears to have a shift rather than capitalization which it learns as a separate character (basically morphology for English) &lt;a href=&quot;https://x.com/i/status/2082882703024927088&quot;&gt;https://x.com/i/status/2082882703024927088&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Shared in &lt;a href=&quot;https://discord.com/channels/1496971597288837320/1504474696723337236/1537780195845734432&quot;&gt;Discord&lt;/a&gt;&lt;/p&gt;</content>
+  </entry>
   <entry>
     <title>bsky.app</title>
     <link href="https://bsky.app/profile/lchoshen.bsky.social/post/3msnh547x4s2g"/>

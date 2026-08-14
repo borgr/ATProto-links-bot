@@ -82,5 +82,17 @@
 "channel": "papers-links-n-sharing",
 "guild_id": "1496971597288837320",
 "channel_id": "1503838806451818656"
+},
+{
+"id": "1537780195845734432",
+"created_at": "2026-08-14T11:09:29.264000+00:00",
+"author": "LChoshen",
+"text": "Interesting discussion,\nTldr Claude has much less tokens (15k?!) than any other and less as versions go, it appears to have a shift rather than capitalization which it learns as a separate character (basically morphology for English) https://x.com/i/status/2082882703024927088",
+"urls": [
+"https://x.com/i/status/2082882703024927088"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
 }
 ]
