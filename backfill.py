@@ -214,11 +214,18 @@ async def on_ready():
                     time.sleep(3 * (attempt + 1))
         if bsky is None:
             # Degrade, don't abort: a transient Bluesky outage must not also block
-            # Semble/Mastodon this cycle. _fail() still exits non-zero -> the alert fires,
-            # and unposted links stay unledgered so they retry next run.
+            # Semble/Mastodon this cycle, and unposted links stay unledgered so they
+            # retry next run. Only ALERT (non-zero exit) if links were actually waiting
+            # to post — a login blip on a cycle with nothing pending is a non-event, and
+            # bsky.social's login endpoint times out intermittently from CI runners.
             detail = f"{type(err).__name__}: {err}".strip(": ") if err else "unknown error"
-            _fail(f"Bluesky login failed after 3 attempts ({detail}) — likely a transient "
-                  "bsky.social outage; continuing with other targets this cycle")
+            pending = sum(1 for m, _ in all_msgs if ("bluesky", str(m.id)) not in ledger)
+            base = (f"Bluesky login failed after 3 attempts ({detail}) — likely a transient "
+                    "bsky.social outage; continuing with other targets this cycle")
+            if pending:
+                _fail(f"{base}. {pending} link(s) awaiting Bluesky will retry next run.")
+            else:
+                print(f"[degraded] {base}. No Bluesky links pending — nothing skipped, not alerting.")
             DO_BLUESKY = False
         else:
             relay.bsky = bsky  # make_embed / post_to_bluesky use this
