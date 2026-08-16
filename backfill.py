@@ -17,6 +17,7 @@ import os
 import sys
 import json
 import time
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
 import discord
@@ -93,7 +94,6 @@ def update_feed_archive(all_msgs):
 
 
 ledger = load_ledger()
-bsky = None
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -126,9 +126,133 @@ async def collect(channel):
     return out
 
 
+class AuthDegrade(Exception):
+    """A target's credentials were systemically rejected mid-run. We disable that target for
+    the rest of the cycle (stop hammering it) but do NOT alert per-cycle — the end-of-run
+    sustained-failure check decides if it's a real problem. Distinct from a transient post
+    error, which just gets counted and left unledgered to retry next run."""
+
+
+@dataclass
+class Target:
+    """One delivery target. The posting loop, preflight, degrade, stuck-check and summary all
+    iterate a list of these, so a target's behavior lives in ONE row instead of a copy-pasted
+    block. `post(m, urls, author)` posts one message: returns normally on success, raises
+    AuthDegrade on systemic auth failure, or any other Exception on a transient error.
+    `preflight()` (if set) returns (ok, detail) and does per-target setup (e.g. login). `cap`
+    is a per-run drip limit; `alert_stuck` excludes drip-capped targets from age-based
+    alerting (old-but-pending is normal when a cap throttles delivery)."""
+    name: str
+    enabled: bool
+    post: object
+    preflight: object = None
+    cap: int = None
+    alert_stuck: bool = True
+    sent: int = 0
+    fail: int = 0
+
+    def __post_init__(self):
+        self.wanted = self.enabled   # snapshot intent before preflight/degrade can flip it
+
+
+# --- per-target adapters: normalize each target to the uniform post() contract above ---
+def _post_semble(m, urls, author):
+    ok, auth_failed = relay.relay_to_semble(m, urls, author)
+    if ok:
+        return
+    if auth_failed:
+        raise AuthDegrade("check SEMBLE_APP_PASSWORD" if relay.SEMBLE_SESSION_AUTH
+                          else "rotate SEMBLE_API_KEY")
+    raise RuntimeError("Semble post failed")            # transient: retry next run
+
+
+def _post_bluesky(m, urls, author):
+    relay.post_to_bluesky(m, urls, author)              # raises on error (treated transient)
+
+
+def _post_mastodon(m, urls, author):
+    try:
+        relay.post_to_mastodon(m, urls, author)
+    except relay.MastodonAuthError as e:
+        raise AuthDegrade(f"rotate MASTODON_ACCESS_TOKEN: {e}")
+
+
+def _preflight_semble():
+    return relay.semble_check()
+
+
+def _preflight_bluesky():
+    """Log in with 3x backoff — bsky.social's login endpoint blips intermittently from CI.
+    On success stashes the client on relay.bsky (post_to_bluesky / make_embed read it)."""
+    from atproto import Client as BskyClient
+    err = None
+    for attempt in range(3):
+        try:
+            c = BskyClient(base_url=relay.ATPROTO_PDS)
+            c.login(relay.ATPROTO_HANDLE, relay.ATPROTO_APP_PASSWORD)
+            relay.bsky = c
+            return True, "logged in"
+        except Exception as e:
+            err = e
+            if attempt < 2:
+                time.sleep(3 * (attempt + 1))
+    return False, (f"{type(err).__name__}: {err}".strip(": ") if err else "unknown error")
+
+
+def _preflight_mastodon():
+    ok, detail = relay.mastodon_check()
+    if ok:
+        relay.mastodon_ensure_bot()
+    return ok, detail
+
+
+def run_preflight(targets):
+    """Verify each enabled target's credentials up front. A failure degrades that target
+    (disabled for the cycle) silently — a single failed cycle isn't actionable; sustained
+    failure is caught at end of run. Never blocks the other targets."""
+    for t in targets:
+        if not t.enabled or t.preflight is None:
+            continue
+        ok, detail = t.preflight()
+        print(f"[preflight] {t.name}: {detail}")
+        if not ok:
+            print(f"[degraded] {t.name} preflight failed ({detail}); "
+                  "skipping it this cycle (links retry next run)")
+            t.enabled = False
+
+
+def post_message(targets, m, urls, author, ledger):
+    """Post one message to every enabled target that hasn't already posted it. Mutates
+    `ledger` and each target's counters; returns True if at least one target posted. Systemic
+    auth failure disables that target for the rest of the cycle; a transient error just counts
+    and leaves the link unledgered to retry next run. (Pure of Discord/network beyond the
+    injected post() adapters, so it's unit-tested with fakes.)"""
+    mid = str(m.id)
+    did_any = False
+    for t in targets:
+        if not t.enabled or (t.name, mid) in ledger:
+            continue
+        if t.cap is not None and t.sent >= t.cap:
+            continue                     # drip cap hit: leave unledgered, continue next run
+        try:
+            t.post(m, urls, author)
+            ledger.add((t.name, mid))
+            t.sent += 1
+            did_any = True
+            print(f"  [{t.name}] posted msg {mid} ({author})")
+        except AuthDegrade as e:
+            print(f"[degraded] {t.name} rejected our credentials mid-run — {e}; "
+                  "skipping it this cycle (unposted links retry next run)")
+            t.enabled = False
+            t.fail += 1
+        except Exception as e:
+            print(f"  [{t.name}][ERR] msg {mid}: {e}")
+            t.fail += 1
+    return did_any
+
+
 @client.event
 async def on_ready():
-    global bsky, DO_SEMBLE, DO_BLUESKY, DO_MASTODON
     print(f"[OK] Logged in as {client.user}")
     chans = [c for g in client.guilds for c in g.text_channels
              if relay.CHANNEL_MATCH in c.name.lower()]
@@ -179,115 +303,25 @@ async def on_ready():
           f"mastodon={DO_MASTODON and relay.MASTODON_ENABLE}, max={MAX}) ...")
     relay.DRY_RUN = False
 
-    # Remember what we INTENDED to post this cycle. The preflight/login paths below flip
-    # the DO_* flags off when a target degrades, but the end-of-run stuck-check still needs
-    # to know a degraded target was supposed to run (that's exactly when links get stuck).
-    want_semble, want_bluesky = DO_SEMBLE, DO_BLUESKY
+    # Build the target table: preflight, the posting loop, degrade, the stuck-check and the
+    # summary all iterate this one list, so each target's behavior lives in a single row.
+    targets = [
+        Target("semble", DO_SEMBLE, post=_post_semble, preflight=_preflight_semble),
+        Target("bluesky", DO_BLUESKY, post=_post_bluesky, preflight=_preflight_bluesky),
+        # Mastodon: dormant unless a token is set; drip-capped, so age-based stuck-alerting
+        # doesn't apply (old-but-pending is normal under the cap) -> alert_stuck=False.
+        Target("mastodon", DO_MASTODON and relay.MASTODON_ENABLE, post=_post_mastodon,
+               preflight=_preflight_mastodon, cap=relay.MASTODON_MAX_PER_RUN, alert_stuck=False),
+    ]
 
-    # Preflight: verify credentials up front so a bad key fails fast and loudly
-    # (the workflow turns a non-zero exit into a Discord alert).
-    if DO_SEMBLE:
-        ok, detail = relay.semble_check()
-        print(f"[preflight] Semble key: {detail}")
-        if not ok:
-            # Degrade, don't abort or alert yet: a Semble blip must not stop Bluesky, and a
-            # single failed cycle is not actionable (session auth re-mints next run). Links
-            # stay unledgered → retried next run; the end-of-run stuck-check alerts only if
-            # they stay undelivered past STUCK_AFTER_HOURS (a real credential/outage problem).
-            _hint = ("check SEMBLE_APP_PASSWORD (create a fresh Bluesky App Password)"
-                     if relay.SEMBLE_SESSION_AUTH else "set a fresh SEMBLE_API_KEY")
-            print(f"[degraded] Semble preflight failed ({detail}) — {_hint}; "
-                  "continuing with Bluesky this cycle")
-            DO_SEMBLE = False
-    if DO_MASTODON and not relay.MASTODON_ENABLE:
-        DO_MASTODON = False              # no token configured -> dormant, skip silently
-    elif DO_MASTODON:
-        ok, detail = relay.mastodon_check()
-        print(f"[preflight] Mastodon: {detail}")
-        if not ok:
-            _fail(f"Mastodon preflight failed ({detail}) — check MASTODON_ACCESS_TOKEN; "
-                  "continuing without it")
-            DO_MASTODON = False
-        else:
-            relay.mastodon_ensure_bot()
-    if DO_BLUESKY:
-        from atproto import Client as BskyClient
-        # bsky.social's login endpoint occasionally returns a transient 5xx / rate-limit
-        # (surfaces as an exception with an empty message). Retry with backoff instead of
-        # failing the whole run on a one-off blip — mirrors the Semble retry policy.
-        err = None
-        for attempt in range(3):
-            try:
-                bsky = BskyClient(base_url=relay.ATPROTO_PDS)
-                bsky.login(relay.ATPROTO_HANDLE, relay.ATPROTO_APP_PASSWORD)
-                err = None
-                break
-            except Exception as e:
-                err, bsky = e, None
-                if attempt < 2:
-                    time.sleep(3 * (attempt + 1))
-        if bsky is None:
-            # Degrade, don't abort or alert yet. bsky.social's login endpoint times out
-            # intermittently from CI runners (a one-off, self-clearing blip); a transient
-            # outage must not block Semble/Mastodon either. Unposted links stay unledgered
-            # and retry next run. The end-of-run stuck-check decides whether this is a real
-            # problem — it alerts only once a link has stayed undelivered past
-            # STUCK_AFTER_HOURS, so a single failed cycle (idle OR with a fresh link) is silent.
-            detail = f"{type(err).__name__}: {err}".strip(": ") if err else "unknown error"
-            print(f"[degraded] Bluesky login failed after 3 attempts ({detail}) — likely a "
-                  "transient bsky.social outage; continuing with other targets this cycle")
-            DO_BLUESKY = False
-        else:
-            relay.bsky = bsky  # make_embed / post_to_bluesky use this
-            print("[OK] Bluesky logged in")
+    run_preflight(targets)
 
-    posted = semble_fail = bluesky_fail = mastodon_fail = mastodon_posted = 0
+    posted = 0
     for m, urls in all_msgs:
         if MAX is not None and posted >= MAX:
             print(f"[stop] reached --max {MAX}")
             break
-        author = m.author.display_name
-        did_any = False
-        if DO_SEMBLE and ("semble", str(m.id)) not in ledger:
-            ok, auth_failed = relay.relay_to_semble(m, urls, author)
-            if ok:
-                ledger.add(("semble", str(m.id)))  # only mark done if every URL succeeded
-                did_any = True
-            else:
-                semble_fail += 1
-                if auth_failed:                 # systemic: stop Semble this cycle, keep Bluesky
-                    _hint = ("check SEMBLE_APP_PASSWORD" if relay.SEMBLE_SESSION_AUTH
-                             else "rotate SEMBLE_API_KEY")
-                    print(f"[degraded] Semble rejected our credentials mid-run — {_hint}; "
-                          "skipping Semble this cycle (unposted links retry next run)")
-                    DO_SEMBLE = False
-        if DO_BLUESKY and ("bluesky", str(m.id)) not in ledger:
-            try:
-                relay.post_to_bluesky(m, urls, author)
-                ledger.add(("bluesky", str(m.id)))
-                print(f"  [bluesky] posted msg {m.id} ({author})")
-                did_any = True
-            except Exception as e:
-                print(f"  [bluesky][ERR] msg {m.id}: {e}")
-                bluesky_fail += 1
-        if DO_MASTODON and ("mastodon", str(m.id)) not in ledger:
-            if mastodon_posted >= relay.MASTODON_MAX_PER_RUN:
-                pass  # drip cap hit: leave unledgered so the backlog continues next run
-            else:
-                try:
-                    relay.post_to_mastodon(m, urls, author)
-                    ledger.add(("mastodon", str(m.id)))
-                    mastodon_posted += 1
-                    print(f"  [mastodon] posted msg {m.id} ({author})")
-                    did_any = True
-                except relay.MastodonAuthError as e:
-                    _fail(f"Mastodon rejected the token mid-run — rotate MASTODON_ACCESS_TOKEN: {e}")
-                    DO_MASTODON = False
-                    mastodon_fail += 1
-                except Exception as e:
-                    print(f"  [mastodon][ERR] msg {m.id}: {e}")
-                    mastodon_fail += 1
-        if did_any:
+        if post_message(targets, m, urls, m.author.display_name, ledger):
             posted += 1
             save_ledger(ledger)
             time.sleep(2)  # gentle pacing
@@ -295,27 +329,25 @@ async def on_ready():
     save_ledger(ledger)
 
     # SUSTAINED-failure alerting. Transient blips above degraded silently; here we alert
-    # (non-zero exit → workflow ping) only if a link we meant to post has stayed undelivered
-    # for longer than STUCK_AFTER_HOURS — i.e. it survived multiple retry cycles, so it's a
-    # real credential/outage problem, not a hiccup. A one-off failed cycle (idle, or with a
-    # freshly-arrived link) never trips this; a genuinely stuck link always does.
-    # (Mastodon is excluded: its MASTODON_MAX_PER_RUN drip cap makes old-but-pending links
-    # normal, so age isn't a failure signal there.)
+    # (non-zero exit → workflow ping) only if a link we MEANT to post (t.wanted, snapshotted
+    # before degrade) has stayed undelivered longer than STUCK_AFTER_HOURS — it survived
+    # multiple retry cycles, so it's a real credential/outage problem, not a hiccup. A one-off
+    # failed cycle (idle, or with a freshly-arrived link) never trips this. Drip-capped
+    # targets are excluded (alert_stuck=False): old-but-pending is normal when a cap throttles.
     now = datetime.now(timezone.utc)
     max_age = timedelta(hours=STUCK_AFTER_HOURS)
-    for tgt, wanted in (("semble", want_semble), ("bluesky", want_bluesky)):
-        if not wanted:
+    for t in targets:
+        if not (t.wanted and t.alert_stuck):
             continue
-        stuck = relay.links_stuck_since(all_msgs, ledger, tgt, now, max_age)
+        stuck = relay.links_stuck_since(all_msgs, ledger, t.name, now, max_age)
         if stuck:
             oldest_h = max((now - m.created_at).total_seconds() for m in stuck) / 3600
-            _fail(f"{len(stuck)} {tgt} link(s) stuck >{STUCK_AFTER_HOURS}h "
-                  f"(oldest {oldest_h:.0f}h) — {tgt} has failed across multiple cycles; "
+            _fail(f"{len(stuck)} {t.name} link(s) stuck >{STUCK_AFTER_HOURS}h "
+                  f"(oldest {oldest_h:.0f}h) — {t.name} has failed across multiple cycles; "
                   f"check its auth/outage")
 
-    summary = (f"posted={posted}  semble_fail={semble_fail}  "
-               f"bluesky_fail={bluesky_fail}  mastodon_fail={mastodon_fail}  "
-               f"mastodon_posted={mastodon_posted}  ledger={len(ledger)}")
+    per_target = "  ".join(f"{t.name}={t.sent}/{t.fail}" for t in targets)  # posted/failed
+    summary = f"posted={posted}  [{per_target}]  ledger={len(ledger)}"
     print(f"\nDONE. {summary}")
     step = os.environ.get("GITHUB_STEP_SUMMARY")
     if step:
@@ -327,5 +359,6 @@ async def on_ready():
     await client.close()
 
 
-client.run(relay.DISCORD_TOKEN)
-raise SystemExit(EXIT_CODE)
+if __name__ == "__main__":
+    client.run(relay.DISCORD_TOKEN)
+    raise SystemExit(EXIT_CODE)

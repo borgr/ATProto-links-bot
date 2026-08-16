@@ -182,5 +182,70 @@ def test_stuck():
     return fails
 
 
+def test_targets():
+    """post_message drives every target from one loop: success ledgers + counts, an
+    already-ledgered link is skipped, a drip cap leaves links unledgered, a systemic auth
+    failure (AuthDegrade) disables that target for the cycle, and a transient error just
+    counts (target stays enabled, link stays unledgered to retry)."""
+    import backfill
+    fails = 0
+
+    def check(name, cond):
+        nonlocal fails
+        print(f"  [{'ok' if cond else 'FAIL'}] {name}")
+        if not cond:
+            fails += 1
+
+    class _M:
+        def __init__(self, mid):
+            self.id = mid
+
+    def ok_post(m, urls, author):
+        return None
+
+    def auth_post(m, urls, author):
+        raise backfill.AuthDegrade("bad creds")
+
+    def boom_post(m, urls, author):
+        raise RuntimeError("timeout")
+
+    # one healthy target: posts, ledgers, counts, returns True
+    led = set()
+    t = backfill.Target("x", True, post=ok_post)
+    check("healthy -> posts + ledgers", backfill.post_message([t], _M(1), ["u"], "me", led) is True
+          and ("x", "1") in led and t.sent == 1)
+    # same message again -> already ledgered, skipped, no double count
+    check("ledgered -> skip", backfill.post_message([t], _M(1), ["u"], "me", led) is False
+          and t.sent == 1)
+
+    # drip cap: cap=1, second distinct message is left unledgered
+    led = set()
+    c = backfill.Target("cap", True, post=ok_post, cap=1)
+    backfill.post_message([c], _M(1), ["u"], "me", led)
+    check("cap -> first posts", ("cap", "1") in led and c.sent == 1)
+    backfill.post_message([c], _M(2), ["u"], "me", led)
+    check("cap -> second unledgered", ("cap", "2") not in led and c.sent == 1)
+
+    # AuthDegrade disables the target for the cycle; link not ledgered
+    led = set()
+    a = backfill.Target("a", True, post=auth_post)
+    check("auth -> not posted", backfill.post_message([a], _M(1), ["u"], "me", led) is False
+          and ("a", "1") not in led and a.enabled is False and a.fail == 1)
+    # disabled target is skipped on the next message
+    check("auth -> disabled skips next",
+          backfill.post_message([a], _M(2), ["u"], "me", led) is False and a.fail == 1)
+
+    # transient error: counts, stays enabled, link unledgered (retries next run)
+    led = set()
+    b = backfill.Target("b", True, post=boom_post)
+    check("transient -> counts, stays enabled",
+          backfill.post_message([b], _M(1), ["u"], "me", led) is False
+          and ("b", "1") not in led and b.enabled is True and b.fail == 1)
+
+    print(f"\n{'ALL PASS' if fails == 0 else str(fails) + ' FAILURES'} (targets)")
+    return fails
+
+
 if __name__ == "__main__":
-    raise SystemExit(1 if (main() + test_session() + test_stuck()) else 0)
+    raise SystemExit(
+        1 if (main() + test_session() + test_stuck() + test_targets()) else 0)
