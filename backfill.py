@@ -46,6 +46,12 @@ AFTER = (datetime.now(timezone.utc) - timedelta(days=SINCE_DAYS)) if SINCE_DAYS 
 LEDGER_PATH = "backfill_done.json"
 FEED_PATH = "feed_items.json"    # content archive that build_feed.py renders into docs/
 
+# A per-cycle auth/login blip is a non-event: unposted links stay unledgered and are
+# re-attempted every run, so a transient outage self-heals with no data loss. We therefore
+# alert ONLY on SUSTAINED failure — a link that has stayed undelivered for longer than this
+# (≈ 2-3 missed hourly cycles), which means a real credential/outage problem, not a hiccup.
+STUCK_AFTER_HOURS = 3
+
 
 def load_ledger():
     if os.path.exists(LEDGER_PATH):
@@ -173,17 +179,25 @@ async def on_ready():
           f"mastodon={DO_MASTODON and relay.MASTODON_ENABLE}, max={MAX}) ...")
     relay.DRY_RUN = False
 
+    # Remember what we INTENDED to post this cycle. The preflight/login paths below flip
+    # the DO_* flags off when a target degrades, but the end-of-run stuck-check still needs
+    # to know a degraded target was supposed to run (that's exactly when links get stuck).
+    want_semble, want_bluesky = DO_SEMBLE, DO_BLUESKY
+
     # Preflight: verify credentials up front so a bad key fails fast and loudly
     # (the workflow turns a non-zero exit into a Discord alert).
     if DO_SEMBLE:
         ok, detail = relay.semble_check()
         print(f"[preflight] Semble key: {detail}")
         if not ok:
-            # Degrade, don't abort: a dead Semble credential must not stop Bluesky too.
-            # _fail() still makes the run exit non-zero, so the alert fires.
+            # Degrade, don't abort or alert yet: a Semble blip must not stop Bluesky, and a
+            # single failed cycle is not actionable (session auth re-mints next run). Links
+            # stay unledgered → retried next run; the end-of-run stuck-check alerts only if
+            # they stay undelivered past STUCK_AFTER_HOURS (a real credential/outage problem).
             _hint = ("check SEMBLE_APP_PASSWORD (create a fresh Bluesky App Password)"
                      if relay.SEMBLE_SESSION_AUTH else "set a fresh SEMBLE_API_KEY")
-            _fail(f"Semble preflight failed ({detail}) — {_hint}; continuing with Bluesky only")
+            print(f"[degraded] Semble preflight failed ({detail}) — {_hint}; "
+                  "continuing with Bluesky this cycle")
             DO_SEMBLE = False
     if DO_MASTODON and not relay.MASTODON_ENABLE:
         DO_MASTODON = False              # no token configured -> dormant, skip silently
@@ -213,19 +227,15 @@ async def on_ready():
                 if attempt < 2:
                     time.sleep(3 * (attempt + 1))
         if bsky is None:
-            # Degrade, don't abort: a transient Bluesky outage must not also block
-            # Semble/Mastodon this cycle, and unposted links stay unledgered so they
-            # retry next run. Only ALERT (non-zero exit) if links were actually waiting
-            # to post — a login blip on a cycle with nothing pending is a non-event, and
-            # bsky.social's login endpoint times out intermittently from CI runners.
+            # Degrade, don't abort or alert yet. bsky.social's login endpoint times out
+            # intermittently from CI runners (a one-off, self-clearing blip); a transient
+            # outage must not block Semble/Mastodon either. Unposted links stay unledgered
+            # and retry next run. The end-of-run stuck-check decides whether this is a real
+            # problem — it alerts only once a link has stayed undelivered past
+            # STUCK_AFTER_HOURS, so a single failed cycle (idle OR with a fresh link) is silent.
             detail = f"{type(err).__name__}: {err}".strip(": ") if err else "unknown error"
-            pending = sum(1 for m, _ in all_msgs if ("bluesky", str(m.id)) not in ledger)
-            base = (f"Bluesky login failed after 3 attempts ({detail}) — likely a transient "
-                    "bsky.social outage; continuing with other targets this cycle")
-            if pending:
-                _fail(f"{base}. {pending} link(s) awaiting Bluesky will retry next run.")
-            else:
-                print(f"[degraded] {base}. No Bluesky links pending — nothing skipped, not alerting.")
+            print(f"[degraded] Bluesky login failed after 3 attempts ({detail}) — likely a "
+                  "transient bsky.social outage; continuing with other targets this cycle")
             DO_BLUESKY = False
         else:
             relay.bsky = bsky  # make_embed / post_to_bluesky use this
@@ -245,10 +255,11 @@ async def on_ready():
                 did_any = True
             else:
                 semble_fail += 1
-                if auth_failed:                 # systemic: stop Semble, keep Bluesky
+                if auth_failed:                 # systemic: stop Semble this cycle, keep Bluesky
                     _hint = ("check SEMBLE_APP_PASSWORD" if relay.SEMBLE_SESSION_AUTH
                              else "rotate SEMBLE_API_KEY")
-                    _fail(f"Semble rejected our credentials mid-run — {_hint}")
+                    print(f"[degraded] Semble rejected our credentials mid-run — {_hint}; "
+                          "skipping Semble this cycle (unposted links retry next run)")
                     DO_SEMBLE = False
         if DO_BLUESKY and ("bluesky", str(m.id)) not in ledger:
             try:
@@ -282,6 +293,26 @@ async def on_ready():
             time.sleep(2)  # gentle pacing
 
     save_ledger(ledger)
+
+    # SUSTAINED-failure alerting. Transient blips above degraded silently; here we alert
+    # (non-zero exit → workflow ping) only if a link we meant to post has stayed undelivered
+    # for longer than STUCK_AFTER_HOURS — i.e. it survived multiple retry cycles, so it's a
+    # real credential/outage problem, not a hiccup. A one-off failed cycle (idle, or with a
+    # freshly-arrived link) never trips this; a genuinely stuck link always does.
+    # (Mastodon is excluded: its MASTODON_MAX_PER_RUN drip cap makes old-but-pending links
+    # normal, so age isn't a failure signal there.)
+    now = datetime.now(timezone.utc)
+    max_age = timedelta(hours=STUCK_AFTER_HOURS)
+    for tgt, wanted in (("semble", want_semble), ("bluesky", want_bluesky)):
+        if not wanted:
+            continue
+        stuck = relay.links_stuck_since(all_msgs, ledger, tgt, now, max_age)
+        if stuck:
+            oldest_h = max((now - m.created_at).total_seconds() for m in stuck) / 3600
+            _fail(f"{len(stuck)} {tgt} link(s) stuck >{STUCK_AFTER_HOURS}h "
+                  f"(oldest {oldest_h:.0f}h) — {tgt} has failed across multiple cycles; "
+                  f"check its auth/outage")
+
     summary = (f"posted={posted}  semble_fail={semble_fail}  "
                f"bluesky_fail={bluesky_fail}  mastodon_fail={mastodon_fail}  "
                f"mastodon_posted={mastodon_posted}  ledger={len(ledger)}")

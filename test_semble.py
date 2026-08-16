@@ -5,6 +5,7 @@ plus the app-password session auth (createSession) recovery path.
 These use mocks (no network). Run:  python test_semble.py
 """
 import urllib.error
+from datetime import datetime, timedelta, timezone
 import relay
 
 
@@ -134,5 +135,52 @@ def test_session():
     return fails
 
 
+class _AgedMsg:
+    """Minimal stand-in for a discord.Message: just an id and a created_at."""
+    def __init__(self, mid, age_hours):
+        self.id = mid
+        self.created_at = datetime.now(timezone.utc) - timedelta(hours=age_hours)
+
+
+def test_stuck():
+    """links_stuck_since drives SUSTAINED-failure alerting: a link only counts as stuck
+    once it's both unledgered for the target AND older than the max_age (multiple missed
+    cycles). Fresh unposted links and already-posted links must never count."""
+    fails = 0
+
+    def check(name, cond):
+        nonlocal fails
+        print(f"  [{'ok' if cond else 'FAIL'}] {name}")
+        if not cond:
+            fails += 1
+
+    now = datetime.now(timezone.utc)
+    max_age = timedelta(hours=3)
+    old = _AgedMsg(1, 5)      # 5h old — past the window
+    fresh = _AgedMsg(2, 0.5)  # 30 min old — just arrived
+    all_msgs = [(old, ["u1"]), (fresh, ["u2"])]
+
+    # nothing ledgered: only the OLD one is "stuck" (fresh one is a normal in-flight retry)
+    stuck = relay.links_stuck_since(all_msgs, set(), "bluesky", now, max_age)
+    check("old unposted -> stuck; fresh unposted -> not", stuck == [old])
+
+    # old one already posted (ledgered) -> nothing stuck
+    led = {("bluesky", "1")}
+    check("ledgered old -> not stuck",
+          relay.links_stuck_since(all_msgs, led, "bluesky", now, max_age) == [])
+
+    # per-target: a bluesky-ledgered link is still stuck for semble
+    check("ledger is per-target",
+          relay.links_stuck_since(all_msgs, led, "semble", now, max_age) == [old])
+
+    # empty when everything is posted
+    both = {("bluesky", "1"), ("bluesky", "2")}
+    check("all posted -> empty",
+          relay.links_stuck_since(all_msgs, both, "bluesky", now, max_age) == [])
+
+    print(f"\n{'ALL PASS' if fails == 0 else str(fails) + ' FAILURES'} (stuck)")
+    return fails
+
+
 if __name__ == "__main__":
-    raise SystemExit(1 if (main() + test_session()) else 0)
+    raise SystemExit(1 if (main() + test_session() + test_stuck()) else 0)

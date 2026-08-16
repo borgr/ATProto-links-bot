@@ -388,6 +388,19 @@ def semble_check():
         return False, f"unreachable: {e}"
 
 
+def links_stuck_since(all_msgs, ledger, target, now, max_age):
+    """Messages whose link still isn't in `ledger` for `target` AND that are older than
+    `max_age`. Because every run re-attempts unledgered links, message age is a stateless
+    proxy for "how long has this link been failing to post" — so this is the set that has
+    been undelivered across MULTIPLE cycles (a sustained failure), as opposed to a one-off
+    transient blip on a freshly-arrived link. Alerting keys on this, not per-cycle errors.
+
+    `all_msgs` is the [(discord.Message, [url,...]), ...] list; `now` and `max_age` are a
+    timezone-aware datetime and a timedelta (passed in so callers/tests control the clock)."""
+    return [m for (m, _urls) in all_msgs
+            if (target, str(m.id)) not in ledger and (now - m.created_at) > max_age]
+
+
 def relay_to_semble(message, urls, author):
     """Add each (deduped) URL in the message to Semble.
     Returns (all_ok: bool, auth_failed: bool)."""
