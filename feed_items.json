@@ -130,5 +130,17 @@
 "channel": "papers-links-n-sharing",
 "guild_id": "1496971597288837320",
 "channel_id": "1504474696723337236"
+},
+{
+"id": "1539013613296296077",
+"created_at": "2026-08-17T20:50:38.900000+00:00",
+"author": "LChoshen",
+"text": "Look what my research review found.\nhttps://aclanthology.org/2024.acl-long.833/",
+"urls": [
+"https://aclanthology.org/2024.acl-long.833/"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
 }
 ]
