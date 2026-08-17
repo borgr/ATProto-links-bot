@@ -94,5 +94,17 @@
 "channel": "papers-links-n-sharing",
 "guild_id": "1496971597288837320",
 "channel_id": "1504474696723337236"
+},
+{
+"id": "1538705874913202216",
+"created_at": "2026-08-17T00:27:48.352000+00:00",
+"author": "Uriel Dolev",
+"text": "hopefully our hyperparameters are well tuned 😅  <@165490503570292736> \nhttps://x.com/askalphaxiv/status/2088724659978265053?s=20",
+"urls": [
+"https://x.com/askalphaxiv/status/2088724659978265053?s=20"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
 }
 ]
