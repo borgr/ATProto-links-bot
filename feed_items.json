@@ -142,5 +142,17 @@
 "channel": "papers-links-n-sharing",
 "guild_id": "1496971597288837320",
 "channel_id": "1504474696723337236"
+},
+{
+"id": "1540354825378594816",
+"created_at": "2026-08-21T13:40:08.779000+00:00",
+"author": "The Data Therapist",
+"text": "language-specific to appear EMNLP 2026\nlayers https://arxiv.org/abs/2605.26735\n\ncc <@165490503570292736> <@430824383100092426>",
+"urls": [
+"https://arxiv.org/abs/2605.26735"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
 }
 ]
