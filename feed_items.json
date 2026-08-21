@@ -154,5 +154,17 @@
 "channel": "papers-links-n-sharing",
 "guild_id": "1496971597288837320",
 "channel_id": "1504474696723337236"
+},
+{
+"id": "1540470266902216705",
+"created_at": "2026-08-21T21:18:52.183000+00:00",
+"author": "LChoshen",
+"text": "Old, but worth a look, reminding of the MoE approaches to separate languages\nhttps://aclanthology.org/2022.naacl-main.255.pdf",
+"urls": [
+"https://aclanthology.org/2022.naacl-main.255.pdf"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
 }
 ]
