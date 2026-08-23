@@ -1,5 +1,341 @@
 [
 {
+"id": "1503838920704659718",
+"created_at": "2026-05-12T19:18:58.672000+00:00",
+"author": "LChoshen",
+"text": "https://arxiv.org/pdf/2603.04678",
+"urls": [
+"https://arxiv.org/pdf/2603.04678"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1503838806451818656"
+},
+{
+"id": "1504474736015708275",
+"created_at": "2026-05-14T13:25:28.855000+00:00",
+"author": "LChoshen",
+"text": "Question amount still stands\nhttps://arxiv.org/abs/2605.12515",
+"urls": [
+"https://arxiv.org/abs/2605.12515"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
+},
+{
+"id": "1504474761479323678",
+"created_at": "2026-05-14T13:25:34.926000+00:00",
+"author": "LChoshen",
+"text": "https://arxiv.org/abs/2603.04678",
+"urls": [
+"https://arxiv.org/abs/2603.04678"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
+},
+{
+"id": "1504475042304491560",
+"created_at": "2026-05-14T13:26:41.880000+00:00",
+"author": "LChoshen",
+"text": "https://arxiv.org/abs/2509.18750",
+"urls": [
+"https://arxiv.org/abs/2509.18750"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
+},
+{
+"id": "1504475075947008151",
+"created_at": "2026-05-14T13:26:49.901000+00:00",
+"author": "LChoshen",
+"text": "https://x.com/JulieKallini/status/2053853543552217478?s=20",
+"urls": [
+"https://x.com/JulieKallini/status/2053853543552217478?s=20"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
+},
+{
+"id": "1504475114027221012",
+"created_at": "2026-05-14T13:26:58.980000+00:00",
+"author": "LChoshen",
+"text": "Discussion on metadata for pretraining ( @Craig @Elisabeth might be especially interesting to you I believe)\nhttps://x.com/yoavgo/status/2053949407322685475?s=20",
+"urls": [
+"https://x.com/yoavgo/status/2053949407322685475?s=20"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
+},
+{
+"id": "1504475147409817601",
+"created_at": "2026-05-14T13:27:06.939000+00:00",
+"author": "LChoshen",
+"text": "Didn't dig deep, but that looks interesting\nhttps://x.com/eliebakouch/status/2054619486213251263?s=20",
+"urls": [
+"https://x.com/eliebakouch/status/2054619486213251263?s=20"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
+},
+{
+"id": "1506252940426346556",
+"created_at": "2026-05-19T11:11:25.824000+00:00",
+"author": "LChoshen",
+"text": "https://x.com/i/status/2056394276565889152",
+"urls": [
+"https://x.com/i/status/2056394276565889152"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
+},
+{
+"id": "1506934742598029313",
+"created_at": "2026-05-21T08:20:40.129000+00:00",
+"author": "Uriel Dolev",
+"text": "I think it’s worth looking at to try to ensure that our experiments will transfer to large scale:\n\nhttps://x.com/rosinality/status/2057370209434939792?s=46\n\n<@165490503570292736>",
+"urls": [
+"https://x.com/rosinality/status/2057370209434939792?s=46"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
+},
+{
+"id": "1508071327662346273",
+"created_at": "2026-05-24T11:37:03.125000+00:00",
+"author": "LChoshen",
+"text": "https://arxiv.org/abs/2605.19284",
+"urls": [
+"https://arxiv.org/abs/2605.19284"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
+},
+{
+"id": "1511776057261555803",
+"created_at": "2026-06-03T16:58:19.492000+00:00",
+"author": "LChoshen",
+"text": "https://ibm-research.slack.com/archives/C75J6APAR/p1780505621532539\nVision: We replaced Gemma 4’s vision encoder with a lightweight embedding module consisting of a single matrix multiplication, positional embedding and normalizations. This allows the LLM backbone to take over visual processing.\n\nAudio: We simplified audio processing even further. We removed the audio encoder entirely and projected the raw audio signal into the same dimensional space as text tokens.",
+"urls": [
+"https://ibm-research.slack.com/archives/C75J6APAR/p1780505621532539"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
+},
+{
+"id": "1511863805632581683",
+"created_at": "2026-06-03T22:47:00.334000+00:00",
+"author": "LChoshen",
+"text": "For future related work sections (e.g. <@761599518683955230> ) generalization not only across languages but modalities (vision surely have such issues as well, I definitely know they are really good at answering based on the text alone and not based on the image) and omni models?\nhttps://x.com/GallilMaimon/status/2050078323070431586?s=20",
+"urls": [
+"https://x.com/GallilMaimon/status/2050078323070431586?s=20"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
+},
+{
+"id": "1512411208215564318",
+"created_at": "2026-06-05T11:02:11.280000+00:00",
+"author": "LChoshen",
+"text": "To make confidence estimation (calibration) in multilingual setting, they find a place to make a probe that transfers rather than fine-tune for each language.\nhttps://scholar.google.com/scholar_url?url=https://arxiv.org/pdf/2605.31220&hl=en&sa=X&d=2215136617550590432&ei=hiEiauu7Luq46rQP1fX7-As&scisig=ANDmEU5j-qpRQ8tmC88OzS1Ur-nx&oi=scholaralrt&hist=8b8IhUYAAAAJ:9281163533438476704:ANDmEU7vdlWyDCQpQ5uV7SBVlopI&html=&pos=0&folt=cit&fols=",
+"urls": [
+"https://scholar.google.com/scholar_url?url=https://arxiv.org/pdf/2605.31220&hl=en&sa=X&d=2215136617550590432&ei=hiEiauu7Luq46rQP1fX7-As&scisig=ANDmEU5j-qpRQ8tmC88OzS1Ur-nx&oi=scholaralrt&hist=8b8IhUYAAAAJ:9281163533438476704:ANDmEU7vdlWyDCQpQ5uV7SBVlopI&html=&pos=0&folt=cit&fols="
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
+},
+{
+"id": "1512440970942222578",
+"created_at": "2026-06-05T13:00:27.267000+00:00",
+"author": "LChoshen",
+"text": "How gemma reduced its embeddings (which also raises questions about multilinguality)\nhttps://newsletter.maartengrootendorst.com/p/a-visual-guide-to-gemma-4-12b",
+"urls": [
+"https://newsletter.maartengrootendorst.com/p/a-visual-guide-to-gemma-4-12b"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
+},
+{
+"id": "1513357876511379527",
+"created_at": "2026-06-08T01:43:54.590000+00:00",
+"author": "efi",
+"text": "A related paper to the multilingual experiments (has an initial alignment step and pre-trains using code switching) https://aclanthology.org/2024.emnlp-main.572v3.pdf",
+"urls": [
+"https://aclanthology.org/2024.emnlp-main.572v3.pdf"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
+},
+{
+"id": "1514626685218324643",
+"created_at": "2026-06-11T13:45:42.159000+00:00",
+"author": "LChoshen",
+"text": "https://bsky.app/profile/tedunderwood.com/post/3mnxaazjpls2e",
+"urls": [
+"https://bsky.app/profile/tedunderwood.com/post/3mnxaazjpls2e"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
+},
+{
+"id": "1514693070892044299",
+"created_at": "2026-06-11T18:09:29.737000+00:00",
+"author": "LChoshen",
+"text": "More multilingual than pretraining, but when we go multimodal useful\nhttps://arxiv.org/abs/2507.19634",
+"urls": [
+"https://arxiv.org/abs/2507.19634"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
+},
+{
+"id": "1515104775669153873",
+"created_at": "2026-06-12T21:25:27.805000+00:00",
+"author": "LChoshen",
+"text": "https://alphaxiv.org/abs/2606.06586",
+"urls": [
+"https://alphaxiv.org/abs/2606.06586"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
+},
+{
+"id": "1515748553606168696",
+"created_at": "2026-06-14T16:03:36.426000+00:00",
+"author": "Uriel Dolev",
+"text": "I think this will be good to keep in mind when thinking about architecture/training changes to improve knowledge sharing <@165490503570292736> <@430824383100092426> \n\nhttps://x.com/neuralwarlock/status/2065902800354336787?s=46",
+"urls": [
+"https://x.com/neuralwarlock/status/2065902800354336787?s=46"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
+},
+{
+"id": "1516090475218731120",
+"created_at": "2026-06-15T14:42:16.891000+00:00",
+"author": "The Data Therapist",
+"text": "Adversarial Concept Search: Predicting Compositional Errors From Feature Geometry\n\n(Including cross lingual fact retrieval and semantic compositionality)\n\nhttps://arxiv.org/pdf/2606.13934",
+"urls": [
+"https://arxiv.org/pdf/2606.13934"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
+},
+{
+"id": "1516091347495555212",
+"created_at": "2026-06-15T14:45:44.858000+00:00",
+"author": "The Data Therapist",
+"text": "Intro thread: https://bsky.app/profile/nsaphra.bsky.social/post/3moddyxd3lc2u",
+"urls": [
+"https://bsky.app/profile/nsaphra.bsky.social/post/3moddyxd3lc2u"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
+},
+{
+"id": "1516467023125680229",
+"created_at": "2026-06-16T15:38:32.908000+00:00",
+"author": "LChoshen",
+"text": "https://arxiv.org/abs/2604.07067",
+"urls": [
+"https://arxiv.org/abs/2604.07067"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
+},
+{
+"id": "1518671553225560174",
+"created_at": "2026-06-22T17:38:33.842000+00:00",
+"author": "Uriel Dolev",
+"text": "Might be relevant: https://arxiv.org/abs/2605.25360",
+"urls": [
+"https://arxiv.org/abs/2605.25360"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
+},
+{
+"id": "1519214735709437993",
+"created_at": "2026-06-24T05:36:58.638000+00:00",
+"author": "The Data Therapist",
+"text": "https://arxiv.org/abs/2602.17655",
+"urls": [
+"https://arxiv.org/abs/2602.17655"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
+},
+{
+"id": "1521556213756727337",
+"created_at": "2026-06-30T16:41:10.507000+00:00",
+"author": "LChoshen",
+"text": "https://alphaxiv.org/abs/2606.24579",
+"urls": [
+"https://alphaxiv.org/abs/2606.24579"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
+},
+{
+"id": "1521825755171127477",
+"created_at": "2026-07-01T10:32:14.188000+00:00",
+"author": "LChoshen",
+"text": "This looks 🔥\nPretrain models on fake languages to avoid learning semantics.\nhttps://icml.cc/virtual/2026/poster/61539\n\nBut could see details yet. if someone reads reply on thread? \nThey will also be in ICML so beyond citing them, if <@542031230326276110>  or <@165490503570292736> wants me to talk to them tell me.",
+"urls": [
+"https://icml.cc/virtual/2026/poster/61539"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
+},
+{
+"id": "1521828099526889472",
+"created_at": "2026-07-01T10:41:33.126000+00:00",
+"author": "LChoshen",
+"text": "Multilingual Reasoning Cascades Need More Context\nA Mazumder, D Zhang, SS Li, Y Tsvetkov, N Bafna - arXiv preprint arXiv:2606.27306, 2026\nTranslation cascades for reasoning translate the query from another language to English, reason in English, and translate the answer back to the original language. This is a competitive approach to multilingual reasoning, but structurally lossy, since each stage discards information later stages may need, including cues for cultural grounding, register, and disambiguation. We examine the benefits of a simple and training-free intervention: a context-aware translation cascade\nhttps://scholar.google.com/scholar_url?url=https://arxiv.org/pdf/2606.27306&hl=en&sa=X&d=13795670202711060265&ei=JLFEaqnMLOqj6rQPoIaFUQ&scisig=ANDmEU4kI1LXMTyMVoEt1waLH4CB&oi=scholaralrt&hist=8b8IhUYAAAAJ:9281163533438476704:ANDmEU7vdlWyDCQpQ5uV7SBVlopI&html=&pos=1&folt=cit&fols=",
+"urls": [
+"https://scholar.google.com/scholar_url?url=https://arxiv.org/pdf/2606.27306&hl=en&sa=X&d=13795670202711060265&ei=JLFEaqnMLOqj6rQPoIaFUQ&scisig=ANDmEU4kI1LXMTyMVoEt1waLH4CB&oi=scholaralrt&hist=8b8IhUYAAAAJ:9281163533438476704:ANDmEU7vdlWyDCQpQ5uV7SBVlopI&html=&pos=1&folt=cit&fols="
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
+},
+{
+"id": "1522752043918426152",
+"created_at": "2026-07-03T23:52:58.635000+00:00",
+"author": "LChoshen",
+"text": "I wish there was a good way to get all the papers here and not just the bottom lines from Micheal Frank's work. Anyway, he has a long list of cool works and this kinda summariezes a lot of the bottom lines.\nhttps://bsky.app/profile/lchoshen.bsky.social/post/3mprqcpo2ms2s",
+"urls": [
+"https://bsky.app/profile/lchoshen.bsky.social/post/3mprqcpo2ms2s"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1503838806451818656"
+},
+{
 "id": "1526278695281492001",
 "created_at": "2026-07-13T17:26:37.842000+00:00",
 "author": "Uriel Dolev",

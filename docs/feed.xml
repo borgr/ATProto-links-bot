@@ -118,4 +118,228 @@
     <author><name>Uriel Dolev</name></author>
     <content type="html">&lt;p&gt;&lt;a href=&quot;https://x.com/anthropicai/status/2076719540785012872?s=46&quot;&gt;https://x.com/anthropicai/status/2076719540785012872?s=46&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Shared in &lt;a href=&quot;https://discord.com/channels/1496971597288837320/1504474696723337236/1526278695281492001&quot;&gt;Discord&lt;/a&gt;&lt;/p&gt;</content>
   </entry>
+  <entry>
+    <title>I wish there was a good way to get all the papers here and not just the bottom lines from Micheal Frank&#x27;s work. Anyway, </title>
+    <link href="https://bsky.app/profile/lchoshen.bsky.social/post/3mprqcpo2ms2s"/>
+    <id>tag:atproto-links-bot,1522752043918426152</id>
+    <updated>2026-07-03T23:52:58Z</updated>
+    <author><name>LChoshen</name></author>
+    <content type="html">&lt;p&gt;I wish there was a good way to get all the papers here and not just the bottom lines from Micheal Frank&amp;#x27;s work. Anyway, he has a long list of cool works and this kinda summariezes a lot of the bottom lines.&lt;br&gt;&lt;a href=&quot;https://bsky.app/profile/lchoshen.bsky.social/post/3mprqcpo2ms2s&quot;&gt;https://bsky.app/profile/lchoshen.bsky.social/post/3mprqcpo2ms2s&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Shared in &lt;a href=&quot;https://discord.com/channels/1496971597288837320/1503838806451818656/1522752043918426152&quot;&gt;Discord&lt;/a&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>Multilingual Reasoning Cascades Need More Context</title>
+    <link href="https://scholar.google.com/scholar_url?url=https://arxiv.org/pdf/2606.27306&amp;hl=en&amp;sa=X&amp;d=13795670202711060265&amp;ei=JLFEaqnMLOqj6rQPoIaFUQ&amp;scisig=ANDmEU4kI1LXMTyMVoEt1waLH4CB&amp;oi=scholaralrt&amp;hist=8b8IhUYAAAAJ:9281163533438476704:ANDmEU7vdlWyDCQpQ5uV7SBVlopI&amp;html=&amp;pos=1&amp;folt=cit&amp;fols="/>
+    <id>tag:atproto-links-bot,1521828099526889472</id>
+    <updated>2026-07-01T10:41:33Z</updated>
+    <author><name>LChoshen</name></author>
+    <content type="html">&lt;p&gt;Multilingual Reasoning Cascades Need More Context&lt;br&gt;A Mazumder, D Zhang, SS Li, Y Tsvetkov, N Bafna - arXiv preprint arXiv:2606.27306, 2026&lt;br&gt;Translation cascades for reasoning translate the query from another language to English, reason in English, and translate the answer back to the original language. This is a competitive approach to multilingual reasoning, but structurally lossy, since each stage discards information later stages may need, including cues for cultural grounding, register, and disambiguation. We examine the benefits of a simple and training-free intervention: a context-aware translation cascade&lt;br&gt;&lt;a href=&quot;https://scholar.google.com/scholar_url?url=https://arxiv.org/pdf/2606.27306&amp;amp;hl=en&amp;amp;sa=X&amp;amp;d=13795670202711060265&amp;amp;ei=JLFEaqnMLOqj6rQPoIaFUQ&amp;amp;scisig=ANDmEU4kI1LXMTyMVoEt1waLH4CB&amp;amp;oi=scholaralrt&amp;amp;hist=8b8IhUYAAAAJ:9281163533438476704:ANDmEU7vdlWyDCQpQ5uV7SBVlopI&amp;amp;html=&amp;amp;pos=1&amp;amp;folt=cit&amp;amp;fols=&quot;&gt;https://scholar.google.com/scholar_url?url=https://arxiv.org/pdf/2606.27306&amp;amp;hl=en&amp;amp;sa=X&amp;amp;d=13795670202711060265&amp;amp;ei=JLFEaqnMLOqj6rQPoIaFUQ&amp;amp;scisig=ANDmEU4kI1LXMTyMVoEt1waLH4CB&amp;amp;oi=scholaralrt&amp;amp;hist=8b8IhUYAAAAJ:9281163533438476704:ANDmEU7vdlWyDCQpQ5uV7SBVlopI&amp;amp;html=&amp;amp;pos=1&amp;amp;folt=cit&amp;amp;fols=&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Shared in &lt;a href=&quot;https://discord.com/channels/1496971597288837320/1504474696723337236/1521828099526889472&quot;&gt;Discord&lt;/a&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>This looks 🔥</title>
+    <link href="https://icml.cc/virtual/2026/poster/61539"/>
+    <id>tag:atproto-links-bot,1521825755171127477</id>
+    <updated>2026-07-01T10:32:14Z</updated>
+    <author><name>LChoshen</name></author>
+    <content type="html">&lt;p&gt;This looks 🔥&lt;br&gt;Pretrain models on fake languages to avoid learning semantics.&lt;br&gt;&lt;a href=&quot;https://icml.cc/virtual/2026/poster/61539&quot;&gt;https://icml.cc/virtual/2026/poster/61539&lt;/a&gt;&lt;br&gt;&lt;br&gt;But could see details yet. if someone reads reply on thread? &lt;br&gt;They will also be in ICML so beyond citing them, if &amp;lt;@542031230326276110&amp;gt;  or &amp;lt;@165490503570292736&amp;gt; wants me to talk to them tell me.&lt;/p&gt;&lt;p&gt;Shared in &lt;a href=&quot;https://discord.com/channels/1496971597288837320/1504474696723337236/1521825755171127477&quot;&gt;Discord&lt;/a&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>alphaxiv.org</title>
+    <link href="https://alphaxiv.org/abs/2606.24579"/>
+    <id>tag:atproto-links-bot,1521556213756727337</id>
+    <updated>2026-06-30T16:41:10Z</updated>
+    <author><name>LChoshen</name></author>
+    <content type="html">&lt;p&gt;&lt;a href=&quot;https://alphaxiv.org/abs/2606.24579&quot;&gt;https://alphaxiv.org/abs/2606.24579&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Shared in &lt;a href=&quot;https://discord.com/channels/1496971597288837320/1504474696723337236/1521556213756727337&quot;&gt;Discord&lt;/a&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>arxiv.org</title>
+    <link href="https://arxiv.org/abs/2602.17655"/>
+    <id>tag:atproto-links-bot,1519214735709437993</id>
+    <updated>2026-06-24T05:36:58Z</updated>
+    <author><name>The Data Therapist</name></author>
+    <content type="html">&lt;p&gt;&lt;a href=&quot;https://arxiv.org/abs/2602.17655&quot;&gt;https://arxiv.org/abs/2602.17655&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Shared in &lt;a href=&quot;https://discord.com/channels/1496971597288837320/1504474696723337236/1519214735709437993&quot;&gt;Discord&lt;/a&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>Might be relevant</title>
+    <link href="https://arxiv.org/abs/2605.25360"/>
+    <id>tag:atproto-links-bot,1518671553225560174</id>
+    <updated>2026-06-22T17:38:33Z</updated>
+    <author><name>Uriel Dolev</name></author>
+    <content type="html">&lt;p&gt;Might be relevant: &lt;a href=&quot;https://arxiv.org/abs/2605.25360&quot;&gt;https://arxiv.org/abs/2605.25360&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Shared in &lt;a href=&quot;https://discord.com/channels/1496971597288837320/1504474696723337236/1518671553225560174&quot;&gt;Discord&lt;/a&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>arxiv.org</title>
+    <link href="https://arxiv.org/abs/2604.07067"/>
+    <id>tag:atproto-links-bot,1516467023125680229</id>
+    <updated>2026-06-16T15:38:32Z</updated>
+    <author><name>LChoshen</name></author>
+    <content type="html">&lt;p&gt;&lt;a href=&quot;https://arxiv.org/abs/2604.07067&quot;&gt;https://arxiv.org/abs/2604.07067&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Shared in &lt;a href=&quot;https://discord.com/channels/1496971597288837320/1504474696723337236/1516467023125680229&quot;&gt;Discord&lt;/a&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>Intro thread</title>
+    <link href="https://bsky.app/profile/nsaphra.bsky.social/post/3moddyxd3lc2u"/>
+    <id>tag:atproto-links-bot,1516091347495555212</id>
+    <updated>2026-06-15T14:45:44Z</updated>
+    <author><name>The Data Therapist</name></author>
+    <content type="html">&lt;p&gt;Intro thread: &lt;a href=&quot;https://bsky.app/profile/nsaphra.bsky.social/post/3moddyxd3lc2u&quot;&gt;https://bsky.app/profile/nsaphra.bsky.social/post/3moddyxd3lc2u&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Shared in &lt;a href=&quot;https://discord.com/channels/1496971597288837320/1504474696723337236/1516091347495555212&quot;&gt;Discord&lt;/a&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>Adversarial Concept Search: Predicting Compositional Errors From Feature Geometry</title>
+    <link href="https://arxiv.org/pdf/2606.13934"/>
+    <id>tag:atproto-links-bot,1516090475218731120</id>
+    <updated>2026-06-15T14:42:16Z</updated>
+    <author><name>The Data Therapist</name></author>
+    <content type="html">&lt;p&gt;Adversarial Concept Search: Predicting Compositional Errors From Feature Geometry&lt;br&gt;&lt;br&gt;(Including cross lingual fact retrieval and semantic compositionality)&lt;br&gt;&lt;br&gt;&lt;a href=&quot;https://arxiv.org/pdf/2606.13934&quot;&gt;https://arxiv.org/pdf/2606.13934&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Shared in &lt;a href=&quot;https://discord.com/channels/1496971597288837320/1504474696723337236/1516090475218731120&quot;&gt;Discord&lt;/a&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>I think this will be good to keep in mind when thinking about architecture/training changes to improve knowledge sharing</title>
+    <link href="https://x.com/neuralwarlock/status/2065902800354336787?s=46"/>
+    <id>tag:atproto-links-bot,1515748553606168696</id>
+    <updated>2026-06-14T16:03:36Z</updated>
+    <author><name>Uriel Dolev</name></author>
+    <content type="html">&lt;p&gt;I think this will be good to keep in mind when thinking about architecture/training changes to improve knowledge sharing &amp;lt;@165490503570292736&amp;gt; &amp;lt;@430824383100092426&amp;gt; &lt;br&gt;&lt;br&gt;&lt;a href=&quot;https://x.com/neuralwarlock/status/2065902800354336787?s=46&quot;&gt;https://x.com/neuralwarlock/status/2065902800354336787?s=46&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Shared in &lt;a href=&quot;https://discord.com/channels/1496971597288837320/1504474696723337236/1515748553606168696&quot;&gt;Discord&lt;/a&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>alphaxiv.org</title>
+    <link href="https://alphaxiv.org/abs/2606.06586"/>
+    <id>tag:atproto-links-bot,1515104775669153873</id>
+    <updated>2026-06-12T21:25:27Z</updated>
+    <author><name>LChoshen</name></author>
+    <content type="html">&lt;p&gt;&lt;a href=&quot;https://alphaxiv.org/abs/2606.06586&quot;&gt;https://alphaxiv.org/abs/2606.06586&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Shared in &lt;a href=&quot;https://discord.com/channels/1496971597288837320/1504474696723337236/1515104775669153873&quot;&gt;Discord&lt;/a&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>More multilingual than pretraining, but when we go multimodal useful</title>
+    <link href="https://arxiv.org/abs/2507.19634"/>
+    <id>tag:atproto-links-bot,1514693070892044299</id>
+    <updated>2026-06-11T18:09:29Z</updated>
+    <author><name>LChoshen</name></author>
+    <content type="html">&lt;p&gt;More multilingual than pretraining, but when we go multimodal useful&lt;br&gt;&lt;a href=&quot;https://arxiv.org/abs/2507.19634&quot;&gt;https://arxiv.org/abs/2507.19634&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Shared in &lt;a href=&quot;https://discord.com/channels/1496971597288837320/1504474696723337236/1514693070892044299&quot;&gt;Discord&lt;/a&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>bsky.app</title>
+    <link href="https://bsky.app/profile/tedunderwood.com/post/3mnxaazjpls2e"/>
+    <id>tag:atproto-links-bot,1514626685218324643</id>
+    <updated>2026-06-11T13:45:42Z</updated>
+    <author><name>LChoshen</name></author>
+    <content type="html">&lt;p&gt;&lt;a href=&quot;https://bsky.app/profile/tedunderwood.com/post/3mnxaazjpls2e&quot;&gt;https://bsky.app/profile/tedunderwood.com/post/3mnxaazjpls2e&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Shared in &lt;a href=&quot;https://discord.com/channels/1496971597288837320/1504474696723337236/1514626685218324643&quot;&gt;Discord&lt;/a&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>A related paper to the multilingual experiments (has an initial alignment step and pre-trains using code switching)</title>
+    <link href="https://aclanthology.org/2024.emnlp-main.572v3.pdf"/>
+    <id>tag:atproto-links-bot,1513357876511379527</id>
+    <updated>2026-06-08T01:43:54Z</updated>
+    <author><name>efi</name></author>
+    <content type="html">&lt;p&gt;A related paper to the multilingual experiments (has an initial alignment step and pre-trains using code switching) &lt;a href=&quot;https://aclanthology.org/2024.emnlp-main.572v3.pdf&quot;&gt;https://aclanthology.org/2024.emnlp-main.572v3.pdf&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Shared in &lt;a href=&quot;https://discord.com/channels/1496971597288837320/1504474696723337236/1513357876511379527&quot;&gt;Discord&lt;/a&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>How gemma reduced its embeddings (which also raises questions about multilinguality)</title>
+    <link href="https://newsletter.maartengrootendorst.com/p/a-visual-guide-to-gemma-4-12b"/>
+    <id>tag:atproto-links-bot,1512440970942222578</id>
+    <updated>2026-06-05T13:00:27Z</updated>
+    <author><name>LChoshen</name></author>
+    <content type="html">&lt;p&gt;How gemma reduced its embeddings (which also raises questions about multilinguality)&lt;br&gt;&lt;a href=&quot;https://newsletter.maartengrootendorst.com/p/a-visual-guide-to-gemma-4-12b&quot;&gt;https://newsletter.maartengrootendorst.com/p/a-visual-guide-to-gemma-4-12b&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Shared in &lt;a href=&quot;https://discord.com/channels/1496971597288837320/1504474696723337236/1512440970942222578&quot;&gt;Discord&lt;/a&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>To make confidence estimation (calibration) in multilingual setting, they find a place to make a probe that transfers ra</title>
+    <link href="https://scholar.google.com/scholar_url?url=https://arxiv.org/pdf/2605.31220&amp;hl=en&amp;sa=X&amp;d=2215136617550590432&amp;ei=hiEiauu7Luq46rQP1fX7-As&amp;scisig=ANDmEU5j-qpRQ8tmC88OzS1Ur-nx&amp;oi=scholaralrt&amp;hist=8b8IhUYAAAAJ:9281163533438476704:ANDmEU7vdlWyDCQpQ5uV7SBVlopI&amp;html=&amp;pos=0&amp;folt=cit&amp;fols="/>
+    <id>tag:atproto-links-bot,1512411208215564318</id>
+    <updated>2026-06-05T11:02:11Z</updated>
+    <author><name>LChoshen</name></author>
+    <content type="html">&lt;p&gt;To make confidence estimation (calibration) in multilingual setting, they find a place to make a probe that transfers rather than fine-tune for each language.&lt;br&gt;&lt;a href=&quot;https://scholar.google.com/scholar_url?url=https://arxiv.org/pdf/2605.31220&amp;amp;hl=en&amp;amp;sa=X&amp;amp;d=2215136617550590432&amp;amp;ei=hiEiauu7Luq46rQP1fX7-As&amp;amp;scisig=ANDmEU5j-qpRQ8tmC88OzS1Ur-nx&amp;amp;oi=scholaralrt&amp;amp;hist=8b8IhUYAAAAJ:9281163533438476704:ANDmEU7vdlWyDCQpQ5uV7SBVlopI&amp;amp;html=&amp;amp;pos=0&amp;amp;folt=cit&amp;amp;fols=&quot;&gt;https://scholar.google.com/scholar_url?url=https://arxiv.org/pdf/2605.31220&amp;amp;hl=en&amp;amp;sa=X&amp;amp;d=2215136617550590432&amp;amp;ei=hiEiauu7Luq46rQP1fX7-As&amp;amp;scisig=ANDmEU5j-qpRQ8tmC88OzS1Ur-nx&amp;amp;oi=scholaralrt&amp;amp;hist=8b8IhUYAAAAJ:9281163533438476704:ANDmEU7vdlWyDCQpQ5uV7SBVlopI&amp;amp;html=&amp;amp;pos=0&amp;amp;folt=cit&amp;amp;fols=&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Shared in &lt;a href=&quot;https://discord.com/channels/1496971597288837320/1504474696723337236/1512411208215564318&quot;&gt;Discord&lt;/a&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>For future related work sections (e.g. &lt;@761599518683955230&gt; ) generalization not only across languages but modalities (</title>
+    <link href="https://x.com/GallilMaimon/status/2050078323070431586?s=20"/>
+    <id>tag:atproto-links-bot,1511863805632581683</id>
+    <updated>2026-06-03T22:47:00Z</updated>
+    <author><name>LChoshen</name></author>
+    <content type="html">&lt;p&gt;For future related work sections (e.g. &amp;lt;@761599518683955230&amp;gt; ) generalization not only across languages but modalities (vision surely have such issues as well, I definitely know they are really good at answering based on the text alone and not based on the image) and omni models?&lt;br&gt;&lt;a href=&quot;https://x.com/GallilMaimon/status/2050078323070431586?s=20&quot;&gt;https://x.com/GallilMaimon/status/2050078323070431586?s=20&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Shared in &lt;a href=&quot;https://discord.com/channels/1496971597288837320/1504474696723337236/1511863805632581683&quot;&gt;Discord&lt;/a&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>ibm-research.slack.com</title>
+    <link href="https://ibm-research.slack.com/archives/C75J6APAR/p1780505621532539"/>
+    <id>tag:atproto-links-bot,1511776057261555803</id>
+    <updated>2026-06-03T16:58:19Z</updated>
+    <author><name>LChoshen</name></author>
+    <content type="html">&lt;p&gt;&lt;a href=&quot;https://ibm-research.slack.com/archives/C75J6APAR/p1780505621532539&quot;&gt;https://ibm-research.slack.com/archives/C75J6APAR/p1780505621532539&lt;/a&gt;&lt;br&gt;Vision: We replaced Gemma 4’s vision encoder with a lightweight embedding module consisting of a single matrix multiplication, positional embedding and normalizations. This allows the LLM backbone to take over visual processing.&lt;br&gt;&lt;br&gt;Audio: We simplified audio processing even further. We removed the audio encoder entirely and projected the raw audio signal into the same dimensional space as text tokens.&lt;/p&gt;&lt;p&gt;Shared in &lt;a href=&quot;https://discord.com/channels/1496971597288837320/1504474696723337236/1511776057261555803&quot;&gt;Discord&lt;/a&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>arxiv.org</title>
+    <link href="https://arxiv.org/abs/2605.19284"/>
+    <id>tag:atproto-links-bot,1508071327662346273</id>
+    <updated>2026-05-24T11:37:03Z</updated>
+    <author><name>LChoshen</name></author>
+    <content type="html">&lt;p&gt;&lt;a href=&quot;https://arxiv.org/abs/2605.19284&quot;&gt;https://arxiv.org/abs/2605.19284&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Shared in &lt;a href=&quot;https://discord.com/channels/1496971597288837320/1504474696723337236/1508071327662346273&quot;&gt;Discord&lt;/a&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>I think it’s worth looking at to try to ensure that our experiments will transfer to large scale</title>
+    <link href="https://x.com/rosinality/status/2057370209434939792?s=46"/>
+    <id>tag:atproto-links-bot,1506934742598029313</id>
+    <updated>2026-05-21T08:20:40Z</updated>
+    <author><name>Uriel Dolev</name></author>
+    <content type="html">&lt;p&gt;I think it’s worth looking at to try to ensure that our experiments will transfer to large scale:&lt;br&gt;&lt;br&gt;&lt;a href=&quot;https://x.com/rosinality/status/2057370209434939792?s=46&quot;&gt;https://x.com/rosinality/status/2057370209434939792?s=46&lt;/a&gt;&lt;br&gt;&lt;br&gt;&amp;lt;@165490503570292736&amp;gt;&lt;/p&gt;&lt;p&gt;Shared in &lt;a href=&quot;https://discord.com/channels/1496971597288837320/1504474696723337236/1506934742598029313&quot;&gt;Discord&lt;/a&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>x.com</title>
+    <link href="https://x.com/i/status/2056394276565889152"/>
+    <id>tag:atproto-links-bot,1506252940426346556</id>
+    <updated>2026-05-19T11:11:25Z</updated>
+    <author><name>LChoshen</name></author>
+    <content type="html">&lt;p&gt;&lt;a href=&quot;https://x.com/i/status/2056394276565889152&quot;&gt;https://x.com/i/status/2056394276565889152&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Shared in &lt;a href=&quot;https://discord.com/channels/1496971597288837320/1504474696723337236/1506252940426346556&quot;&gt;Discord&lt;/a&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>Didn&#x27;t dig deep, but that looks interesting</title>
+    <link href="https://x.com/eliebakouch/status/2054619486213251263?s=20"/>
+    <id>tag:atproto-links-bot,1504475147409817601</id>
+    <updated>2026-05-14T13:27:06Z</updated>
+    <author><name>LChoshen</name></author>
+    <content type="html">&lt;p&gt;Didn&amp;#x27;t dig deep, but that looks interesting&lt;br&gt;&lt;a href=&quot;https://x.com/eliebakouch/status/2054619486213251263?s=20&quot;&gt;https://x.com/eliebakouch/status/2054619486213251263?s=20&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Shared in &lt;a href=&quot;https://discord.com/channels/1496971597288837320/1504474696723337236/1504475147409817601&quot;&gt;Discord&lt;/a&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>Discussion on metadata for pretraining ( @Craig @Elisabeth might be especially interesting to you I believe)</title>
+    <link href="https://x.com/yoavgo/status/2053949407322685475?s=20"/>
+    <id>tag:atproto-links-bot,1504475114027221012</id>
+    <updated>2026-05-14T13:26:58Z</updated>
+    <author><name>LChoshen</name></author>
+    <content type="html">&lt;p&gt;Discussion on metadata for pretraining ( @Craig @Elisabeth might be especially interesting to you I believe)&lt;br&gt;&lt;a href=&quot;https://x.com/yoavgo/status/2053949407322685475?s=20&quot;&gt;https://x.com/yoavgo/status/2053949407322685475?s=20&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Shared in &lt;a href=&quot;https://discord.com/channels/1496971597288837320/1504474696723337236/1504475114027221012&quot;&gt;Discord&lt;/a&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>x.com</title>
+    <link href="https://x.com/JulieKallini/status/2053853543552217478?s=20"/>
+    <id>tag:atproto-links-bot,1504475075947008151</id>
+    <updated>2026-05-14T13:26:49Z</updated>
+    <author><name>LChoshen</name></author>
+    <content type="html">&lt;p&gt;&lt;a href=&quot;https://x.com/JulieKallini/status/2053853543552217478?s=20&quot;&gt;https://x.com/JulieKallini/status/2053853543552217478?s=20&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Shared in &lt;a href=&quot;https://discord.com/channels/1496971597288837320/1504474696723337236/1504475075947008151&quot;&gt;Discord&lt;/a&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>arxiv.org</title>
+    <link href="https://arxiv.org/abs/2509.18750"/>
+    <id>tag:atproto-links-bot,1504475042304491560</id>
+    <updated>2026-05-14T13:26:41Z</updated>
+    <author><name>LChoshen</name></author>
+    <content type="html">&lt;p&gt;&lt;a href=&quot;https://arxiv.org/abs/2509.18750&quot;&gt;https://arxiv.org/abs/2509.18750&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Shared in &lt;a href=&quot;https://discord.com/channels/1496971597288837320/1504474696723337236/1504475042304491560&quot;&gt;Discord&lt;/a&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>arxiv.org</title>
+    <link href="https://arxiv.org/abs/2603.04678"/>
+    <id>tag:atproto-links-bot,1504474761479323678</id>
+    <updated>2026-05-14T13:25:34Z</updated>
+    <author><name>LChoshen</name></author>
+    <content type="html">&lt;p&gt;&lt;a href=&quot;https://arxiv.org/abs/2603.04678&quot;&gt;https://arxiv.org/abs/2603.04678&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Shared in &lt;a href=&quot;https://discord.com/channels/1496971597288837320/1504474696723337236/1504474761479323678&quot;&gt;Discord&lt;/a&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>Question amount still stands</title>
+    <link href="https://arxiv.org/abs/2605.12515"/>
+    <id>tag:atproto-links-bot,1504474736015708275</id>
+    <updated>2026-05-14T13:25:28Z</updated>
+    <author><name>LChoshen</name></author>
+    <content type="html">&lt;p&gt;Question amount still stands&lt;br&gt;&lt;a href=&quot;https://arxiv.org/abs/2605.12515&quot;&gt;https://arxiv.org/abs/2605.12515&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Shared in &lt;a href=&quot;https://discord.com/channels/1496971597288837320/1504474696723337236/1504474736015708275&quot;&gt;Discord&lt;/a&gt;&lt;/p&gt;</content>
+  </entry>
+  <entry>
+    <title>arxiv.org</title>
+    <link href="https://arxiv.org/pdf/2603.04678"/>
+    <id>tag:atproto-links-bot,1503838920704659718</id>
+    <updated>2026-05-12T19:18:58Z</updated>
+    <author><name>LChoshen</name></author>
+    <content type="html">&lt;p&gt;&lt;a href=&quot;https://arxiv.org/pdf/2603.04678&quot;&gt;https://arxiv.org/pdf/2603.04678&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Shared in &lt;a href=&quot;https://discord.com/channels/1496971597288837320/1503838806451818656/1503838920704659718&quot;&gt;Discord&lt;/a&gt;&lt;/p&gt;</content>
+  </entry>
 </feed>
