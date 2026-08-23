@@ -3,7 +3,14 @@ name: relay
 on:
   schedule:
     - cron: "23 * * * *"     # hourly (offset off :00; GitHub cron is best-effort)
-  workflow_dispatch: {}       # lets you run it manually from the Actions tab
+  workflow_dispatch:          # lets you run it manually from the Actions tab
+    inputs:
+      since_days:
+        description: "Days of history to scan (default 30)"
+        default: "30"
+      post:
+        description: "Post to social targets? false = scan/archive only (fills feed_items.json)"
+        default: "true"
 
 concurrency:
   group: relay
@@ -42,7 +49,12 @@ jobs:
           MASTODON_BASE_URL: https://sigmoid.social
           DISCORD_CHANNEL_MATCH: papers-links-n-sharing
         run: |
-          python backfill.py --run all --since-days 30 \
+          # Scheduled runs pass no inputs -> --run all, 30-day window (unchanged).
+          # A manual dispatch can widen the window and/or archive without posting.
+          SINCE="${{ github.event.inputs.since_days }}"; SINCE="${SINCE:-30}"
+          RUN_FLAG="--run all"
+          [ "${{ github.event.inputs.post }}" = "false" ] && RUN_FLAG=""   # scan/archive only
+          python backfill.py $RUN_FLAG --since-days "$SINCE" \
             --exclude-substr "making the links shared outside of discord"
 
       - name: Build RSS/Atom feed + HTML page
