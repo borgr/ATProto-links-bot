@@ -17,7 +17,8 @@ FEED_PATH = os.environ.get("FEED_PATH", "feed_items.json")
 OUT_DIR = os.environ.get("FEED_OUT_DIR", "docs")
 BASE_URL = os.environ.get("PAGES_BASE_URL", "https://borgr.github.io/ATProto-links-bot").rstrip("/")
 TITLE = os.environ.get("FEED_TITLE", "CoLab paper links")
-SUBTITLE = "Links shared in the CoLab Discord #papers-links-n-sharing channels."
+SUBTITLE = os.environ.get(
+    "FEED_SUBTITLE", "Links shared in the CoLab Discord #papers-links-n-sharing channels.")
 
 URL_RE = re.compile(r"https?://[^\s<>()]+[^\s<>().,!?;:'\"]")
 

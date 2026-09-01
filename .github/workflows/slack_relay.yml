@@ -1,0 +1,103 @@
+name: slack-relay
+
+on:
+  schedule:
+    - cron: "41 * * * *"     # hourly, offset from the Discord relay (:23) to avoid push races
+  workflow_dispatch:
+    inputs:
+      max:
+        description: "Cap messages posted this run (blank = no cap)"
+        default: ""
+      post:
+        description: "Post to social targets? false = scan/archive only (fills the feed)"
+        default: "true"
+
+concurrency:
+  group: slack-relay
+  cancel-in-progress: false
+
+permissions:
+  contents: write             # to commit the ledger + feed back
+
+# Dormant until the Slack bot token secret exists — gates every real step below so an
+# empty secret is a clean no-op (no empty babyLM page, no commits).
+env:
+  HAS_SLACK: ${{ secrets.SLACK_BOT_TOKEN != '' }}
+
+jobs:
+  relay:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements.txt
+
+      - name: Relay babyLM Slack #related-work -> Bluesky + Semble + Mastodon
+        if: env.HAS_SLACK == 'true'
+        env:
+          # Slack (source)
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_CHANNEL_ID: ${{ secrets.SLACK_CHANNEL_ID }}
+          SLACK_CHANNEL_NAME: related-work
+          # destinations — the SAME credentials the Discord relay uses (shared accounts)
+          ATPROTO_APP_PASSWORD: ${{ secrets.ATPROTO_APP_PASSWORD }}
+          SEMBLE_APP_PASSWORD: ${{ secrets.SEMBLE_APP_PASSWORD }}
+          SEMBLE_API_KEY: ${{ secrets.SEMBLE_API_KEY }}
+          MASTODON_ACCESS_TOKEN: ${{ secrets.MASTODON_ACCESS_TOKEN }}
+          ATPROTO_HANDLE: colab-links.bsky.social
+          ATPROTO_PDS: https://bsky.social
+          SEMBLE_HANDLE: lchoshen.bsky.social
+          SEMBLE_COLLECTION_IDS: 065840e8-3d9c-4d1b-9f98-c200218a74ed
+          MASTODON_BASE_URL: https://sigmoid.social
+          DRY_RUN: "0"
+        run: |
+          MAX_FLAG=""
+          [ -n "${{ github.event.inputs.max }}" ] && MAX_FLAG="--max ${{ github.event.inputs.max }}"
+          if [ "${{ github.event.inputs.post }}" = "false" ]; then
+            DRY_RUN=1 python slack_backfill.py $MAX_FLAG      # scan + refresh feed, no posting
+          else
+            python slack_backfill.py $MAX_FLAG
+          fi
+
+      - name: Build babyLM RSS/Atom feed + HTML page
+        if: env.HAS_SLACK == 'true'
+        env:
+          FEED_PATH: slack_feed_items.json
+          FEED_OUT_DIR: docs/babylm
+          PAGES_BASE_URL: https://borgr.github.io/ATProto-links-bot/babylm
+          FEED_TITLE: babyLM related work
+          FEED_SUBTITLE: Related work shared in the babyLM Slack #related-work channel.
+        run: python build_feed.py
+
+      - name: Persist ledger + feed (rebase to avoid racing the Discord relay)
+        if: env.HAS_SLACK == 'true'
+        run: |
+          git config user.name "relay-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add slack_done.json slack_feed_items.json docs/babylm
+          git diff --staged --quiet && { echo "no changes"; exit 0; }
+          git commit -m "update slack ledger + babylm feed [skip ci]"
+          # Both relay workflows push to main; rebase-and-retry so scoped commits don't clobber.
+          for i in 1 2 3; do
+            git pull --rebase --autostash && git push && exit 0
+            echo "push race, retrying ($i)"; sleep 3
+          done
+          echo "push failed after retries"; exit 1
+
+      - name: Notify Discord on failure
+        if: failure()
+        env:
+          WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          [ -z "$WEBHOOK" ] && { echo "no DISCORD_WEBHOOK_URL secret; skipping ping"; exit 0; }
+          # De-dupe: only alert on a NEW failure (don't repeat if the previous run also failed).
+          prev=$(gh run list -R "$GITHUB_REPOSITORY" --workflow slack_relay.yml --status completed \
+                   --limit 1 --json conclusion -q '.[0].conclusion' 2>/dev/null || echo "")
+          if [ "$prev" = "failure" ]; then echo "prev run already failed; skipping repeat ping"; exit 0; fi
+          MSG=$(printf '⚠️ **slack-relay** run failed — babyLM links may not have posted this cycle.\n**repo:** %s\n**run:** %s\nLikely causes: expired Slack bot token, or a Bluesky/Semble credential.' \
+            "$GITHUB_REPOSITORY" "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID")
+          jq -n --arg c "$MSG" '{username:"ATProto-links-bot CI", content:$c}' \
+            | curl -sf -H "Content-Type: application/json" -X POST "$WEBHOOK" -d @-

@@ -54,26 +54,26 @@ FEED_PATH = "feed_items.json"    # content archive that build_feed.py renders in
 STUCK_AFTER_HOURS = 3
 
 
-def load_ledger():
-    if os.path.exists(LEDGER_PATH):
+def load_ledger(path=LEDGER_PATH):
+    if os.path.exists(path):
         try:
-            return set(tuple(x) for x in json.load(open(LEDGER_PATH)))
+            return set(tuple(x) for x in json.load(open(path)))
         except Exception:
             return set()
     return set()
 
 
-def save_ledger(ledger):
-    json.dump([list(x) for x in ledger], open(LEDGER_PATH, "w"))
+def save_ledger(ledger, path=LEDGER_PATH):
+    json.dump([list(x) for x in ledger], open(path, "w"))
 
 
-def update_feed_archive(all_msgs):
+def update_feed_archive(all_msgs, path=FEED_PATH):
     """Upsert every scanned link-message into feed_items.json (deduped by id, kept
     sorted oldest->newest). This is the source build_feed.py renders the RSS/HTML from.
     Runs every scan so the feed reflects channel history within the window and persists
     older entries already recorded — independent of what posted to social targets."""
     try:
-        items = json.load(open(FEED_PATH))
+        items = json.load(open(path))
     except Exception:
         items = []
     by_id = {str(it["id"]): it for it in items}
@@ -89,7 +89,7 @@ def update_feed_archive(all_msgs):
             "channel_id": str(m.channel.id),
         }
     merged = sorted(by_id.values(), key=lambda it: it["created_at"])
-    json.dump(merged, open(FEED_PATH, "w"), ensure_ascii=False, indent=0)
+    json.dump(merged, open(path, "w"), ensure_ascii=False, indent=0)
     return len(merged)
 
 
