@@ -514,5 +514,17 @@
 "channel": "papers-links-n-sharing",
 "guild_id": "1496971597288837320",
 "channel_id": "1504474696723337236"
+},
+{
+"id": "1547345127247319090",
+"created_at": "2026-09-09T20:37:06.618000+00:00",
+"author": "The Data Therapist",
+"text": "Warning: a rather long read, but I loved it: The Emergent Symbolic Structure\nof Artificial Neural Networks, McCoy et alia stars (2026)\n\nhttps://arxiv.org/pdf/2608.29530",
+"urls": [
+"https://arxiv.org/pdf/2608.29530"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1503838806451818656"
 }
 ]
