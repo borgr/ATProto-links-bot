@@ -538,5 +538,29 @@
 "channel": "papers-links-n-sharing",
 "guild_id": "1496971597288837320",
 "channel_id": "1503838806451818656"
+},
+{
+"id": "1555269181392429189",
+"created_at": "2026-10-01T17:24:28.348000+00:00",
+"author": "LChoshen",
+"text": "More pre-training doesn't necessarily mean better generalization?\n\nThis new paper discovers mode-hopping, where LLMs repeatedly switch between shallow pattern-matching and actual generalization, even while training loss remains stable.\n\nFor example, OLMo3-32B went from 81% accuracy to 0%, then back to 81.7% within just 40B training tokens.\n\nOn top of that, selecting an earlier 4.5T-token checkpoint instead of a 4.9T one improved GPQA transfer after math fine-tuning (36.3% vs 29.8%) and robustness to alignment attacks (53% vs 21%)\n\nhttps://alphaxiv.org/abs/2609.33150",
+"urls": [
+"https://alphaxiv.org/abs/2609.33150"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
+},
+{
+"id": "1555272482922037353",
+"created_at": "2026-10-01T17:37:35.494000+00:00",
+"author": "The Data Therapist",
+"text": "Pre-pre-training can help token efficiency. Perhaps sharing the same pre-pre-training can improve the crosslingual fact / knowledge transfer too?\n(Need to think further about this, I don’t have a good hypothesis yet)\n\nhttps://arxiv.org/abs/2609.39827",
+"urls": [
+"https://arxiv.org/abs/2609.39827"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
 }
 ]
