@@ -562,5 +562,17 @@
 "channel": "papers-links-n-sharing",
 "guild_id": "1496971597288837320",
 "channel_id": "1504474696723337236"
+},
+{
+"id": "1557079934948876420",
+"created_at": "2026-10-06T17:19:45.638000+00:00",
+"author": "The Data Therapist",
+"text": "Beyond the Rosetta Stone: Unification Forces in Generaliza-\ntion Dynamics\nCarter Blum∗ , Katja Filippova∗& Ann Yuan∗\nAsma Ghandeharioun, Julian Zimmert, Fred Zhang & Jessica Hoffmann\nMor Geva†, Martin Wattenberg‡, Tal Linzen§ & Lucas Dixon\nGoogle DeepMind\n\nLanguage models are known to hallucinate facts, especially during cross-lingual factual\nrecall—that is, when facts are learned in one language, but recalled in another language\n(Goldman et al., 2025). In this work, we are interested in understanding what gives rise to\nthese cross-lingual hallucinations and how to mitigate them. Therefore, we focus our analy-\nsis on the learning dynamics during pretraining (Biderman et al., 2026), and particularly on\nthe impact of training data properties and the resulting model’s representations…\n\nhttps://arxiv.org/pdf/2508.11017",
+"urls": [
+"https://arxiv.org/pdf/2508.11017"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
 }
 ]
