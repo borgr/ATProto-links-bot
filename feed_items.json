@@ -586,5 +586,17 @@
 "channel": "papers-links-n-sharing",
 "guild_id": "1496971597288837320",
 "channel_id": "1504474696723337236"
+},
+{
+"id": "1561336677564416111",
+"created_at": "2026-10-18T11:14:32.164000+00:00",
+"author": "LChoshen",
+"text": "Correct answers and wrong answers are sometimes stable and sometimes not (not the most conclusive finding but relevant)\nhttps://arxiv.org/abs/2610.15277",
+"urls": [
+"https://arxiv.org/abs/2610.15277"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
 }
 ]
