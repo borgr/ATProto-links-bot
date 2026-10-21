@@ -19,6 +19,9 @@ BASE_URL = os.environ.get("PAGES_BASE_URL", "https://borgr.github.io/ATProto-lin
 TITLE = os.environ.get("FEED_TITLE", "CoLab paper links")
 SUBTITLE = os.environ.get(
     "FEED_SUBTITLE", "Links shared in the CoLab Discord #papers-links-n-sharing channels.")
+# The <meta name="description"> / OpenGraph text: what search results and link previews show.
+DESCRIPTION = os.environ.get(
+    "FEED_DESCRIPTION", SUBTITLE + " Newest first, with an RSS/Atom feed to follow in any reader.")
 
 URL_RE = re.compile(r"https?://[^\s<>()]+[^\s<>().,!?;:'\"]")
 
@@ -128,6 +131,14 @@ def build_html(items):
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{html.escape(TITLE)}</title>
+<meta name="description" content="{html.escape(DESCRIPTION)}">
+<meta name="author" content="Leshem Choshen">
+<meta property="og:type" content="website">
+<meta property="og:title" content="{html.escape(TITLE)}">
+<meta property="og:description" content="{html.escape(DESCRIPTION)}">
+<meta property="og:url" content="{html.escape(BASE_URL)}/">
+<meta name="twitter:card" content="summary">
+<link rel="canonical" href="{html.escape(BASE_URL)}/">
 <link rel="alternate" type="application/atom+xml" title="{html.escape(TITLE)}" href="feed.xml">
 <style>
   :root {{ color-scheme: light dark; --fg:#111; --mut:#666; --bg:#fff; --card:#f6f7f9; --link:#1a56db; }}
@@ -143,6 +154,7 @@ def build_html(items):
   .b {{ margin: .3rem 0; word-break: break-word; }}
   .m {{ color: var(--mut); font-size: .85rem; }}
   .feedlink {{ font-size: .85rem; }}
+  footer {{ color: var(--mut); font-size: .85rem; margin-top: 2rem; }}
 </style></head>
 <body>
 <header>
@@ -150,6 +162,7 @@ def build_html(items):
   <p>{html.escape(SUBTITLE)} <span class="feedlink">· <a href="feed.xml">RSS/Atom feed</a></span></p>
 </header>
 {body}
+<footer>Maintained by Leshem Choshen · <a href="https://borgr.github.io/guides/">all guides</a> · <a href="https://borgr.github.io/">homepage</a></footer>
 </body></html>
 """
 
@@ -159,6 +172,10 @@ def main():
     os.makedirs(OUT_DIR, exist_ok=True)
     open(os.path.join(OUT_DIR, "feed.xml"), "w", encoding="utf-8").write(build_atom(items))
     open(os.path.join(OUT_DIR, "index.html"), "w", encoding="utf-8").write(build_html(items))
+    open(os.path.join(OUT_DIR, "sitemap.xml"), "w", encoding="utf-8").write(
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        f'  <url><loc>{html.escape(BASE_URL)}/</loc></url>\n</urlset>\n')
     # tell GitHub Pages not to run these files through Jekyll
     open(os.path.join(OUT_DIR, ".nojekyll"), "w").write("")
     print(f"[feed] wrote {len(items)} item(s) to {OUT_DIR}/feed.xml + index.html")
