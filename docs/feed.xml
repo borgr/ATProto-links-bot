@@ -5,7 +5,15 @@
   <link href="https://borgr.github.io/ATProto-links-bot/feed.xml" rel="self"/>
   <link href="https://borgr.github.io/ATProto-links-bot/"/>
   <id>https://borgr.github.io/ATProto-links-bot/</id>
-  <updated>2026-10-18T11:14:32Z</updated>
+  <updated>2026-11-01T16:12:33Z</updated>
+  <entry>
+    <title>A bit too mathy, but does it seem interesting? (&lt;@165490503570292736&gt; worth a course week?)</title>
+    <link href="https://www.alphaxiv.org/abs/2610.39302"/>
+    <id>tag:atproto-links-bot,1566485109299871874</id>
+    <updated>2026-11-01T16:12:33Z</updated>
+    <author><name>LChoshen</name></author>
+    <content type="html">&lt;p&gt;A bit too mathy, but does it seem interesting? (&amp;lt;@165490503570292736&amp;gt; worth a course week?)&lt;br&gt;&lt;a href=&quot;https://www.alphaxiv.org/abs/2610.39302&quot;&gt;https://www.alphaxiv.org/abs/2610.39302&lt;/a&gt;&lt;/p&gt;&lt;p&gt;Shared in &lt;a href=&quot;https://discord.com/channels/1496971597288837320/1504474696723337236/1566485109299871874&quot;&gt;Discord&lt;/a&gt;&lt;/p&gt;</content>
+  </entry>
   <entry>
     <title>Correct answers and wrong answers are sometimes stable and sometimes not (not the most conclusive finding but relevant)</title>
     <link href="https://arxiv.org/abs/2610.15277"/>
