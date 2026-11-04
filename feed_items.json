@@ -610,5 +610,29 @@
 "channel": "papers-links-n-sharing",
 "guild_id": "1496971597288837320",
 "channel_id": "1504474696723337236"
+},
+{
+"id": "1567552910441586710",
+"created_at": "2026-11-04T14:55:37.574000+00:00",
+"author": "LChoshen",
+"text": "https://active-ai-reading.github.io/papers/",
+"urls": [
+"https://active-ai-reading.github.io/papers/"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
+},
+{
+"id": "1567554713778528447",
+"created_at": "2026-11-04T15:02:47.523000+00:00",
+"author": "uriel",
+"text": "Hey everyone! Excited to share my new paper on CoT controllability 🎉\nhttps://x.com/UrielDolev/status/2117994299686039555\nWould really appreciate a read, and a like or repost to help spread it 🙏",
+"urls": [
+"https://x.com/UrielDolev/status/2117994299686039555"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1503838806451818656"
 }
 ]
