@@ -634,5 +634,17 @@
 "channel": "papers-links-n-sharing",
 "guild_id": "1496971597288837320",
 "channel_id": "1503838806451818656"
+},
+{
+"id": "1569448596603146240",
+"created_at": "2026-11-09T20:28:24.375000+00:00",
+"author": "LChoshen",
+"text": "https://bsky.app/profile/alphaxiv.org/post/3mzuoo4sir22e",
+"urls": [
+"https://bsky.app/profile/alphaxiv.org/post/3mzuoo4sir22e"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1503838806451818656"
 }
 ]
