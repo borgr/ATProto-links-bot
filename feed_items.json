@@ -658,5 +658,17 @@
 "channel": "papers-links-n-sharing",
 "guild_id": "1496971597288837320",
 "channel_id": "1504474696723337236"
+},
+{
+"id": "1573960385411686461",
+"created_at": "2026-11-22T07:16:38.652000+00:00",
+"author": "LChoshen",
+"text": "tl;dr Architectural effects are missed when bad data and not enough overtraining is done.\nSo, overtrain and not only make models bigger.\nIf you did find a change in Academic budget, rejoice, the effect might be larger than you think?\nhttps://www.alphaxiv.org/abs/2611.24963",
+"urls": [
+"https://www.alphaxiv.org/abs/2611.24963"
+],
+"channel": "papers-links-n-sharing",
+"guild_id": "1496971597288837320",
+"channel_id": "1504474696723337236"
 }
 ]
